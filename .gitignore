@@ -1,0 +1,62 @@
+# Dependencias
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Archivos de entorno
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos de construcción
+/frontend/build
+/backend/dist
+/backend/build
+
+# Archivos de caché
+.cache/
+.npm/
+.yarn/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de registro
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de cobertura
+coverage/
+
+# Archivos temporales
+tmp/
+temp/
+
+# Archivos de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos de base de datos local
+*.sqlite
+*.db
+
+# Archivos de certificados (excepto los de ejemplo)
+/backend/certs/*
+!/backend/certs/coloque_seus_certificado_aqui
+
+# Archivos de media
+/backend/public/media/*
+!/backend/public/media/.gitkeep
+
+# Archivos de sesiones de WhatsApp
+/backend/tokens/*
+!/backend/tokens/.gitkeep
