@@ -9,8 +9,7 @@ export default {
   storage: multer.diskStorage({
     destination: publicFolder,
     filename(req, file, cb) {
-    
- 
+     
       const desiredFileName = req.query.ref + path.extname(file.originalname);
 
       return cb(null, desiredFileName);
