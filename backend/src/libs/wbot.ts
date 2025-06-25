@@ -1,42 +1,37 @@
 import * as Sentry from "@sentry/node";
-import makeWASocket, {
-  WASocket,
-  Browsers,
-  DisconnectReason,
-  fetchLatestBaileysVersion,
-  makeCacheableSignalKeyStore,
-  makeInMemoryStore,
-  isJidBroadcast,
-  jidNormalizedUser,
-  CacheStore
-} from "@whiskeysockets/baileys";
+import { Client, LocalAuth, RemoteAuth, Events, MessageMedia } from 'whatsapp-web.js';
 import { Op } from "sequelize";
 import { FindOptions } from "sequelize/types";
 import Whatsapp from "../models/Whatsapp";
 import { logger } from "../utils/logger";
-import MAIN_LOGGER from "@whiskeysockets/baileys/lib/Utils/logger";
-import authState from "../helpers/authState";
-import { Boom } from "@hapi/boom";
 import AppError from "../errors/AppError";
 import { getIO } from "./socket";
-import { Store } from "./store";
 import { StartWhatsAppSession } from "../services/WbotServices/StartWhatsAppSession";
-import DeleteBaileysService from "../services/BaileysServices/DeleteBaileysService";
 import NodeCache from 'node-cache';
 import Contact from "../models/Contact";
 import Ticket from "../models/Ticket";
-const loggerBaileys = MAIN_LOGGER.child({});
-loggerBaileys.level = "error";
+import * as fs from 'fs';
+import * as path from 'path';
 
-type Session = WASocket & {
+// Tipo personalizado para la sesión que extiende Client
+type Session = Client & {
   id?: number;
-  store?: Store;
+  name?: string;
+  companyId?: number;
 };
 
+// Array para almacenar las sesiones activas
 const sessions: Session[] = [];
 
+// Map para controlar reintentos de QR code
 const retriesQrCodeMap = new Map<number, number>();
 
+// Cache para dispositivos y mensajes
+const msgRetryCounterCache = new NodeCache();
+
+/**
+ * Obtiene una sesión activa por ID de WhatsApp
+ */
 export const getWbot = (whatsappId: number): Session => {
   const sessionIndex = sessions.findIndex(s => s.id === whatsappId);
 
@@ -46,6 +41,9 @@ export const getWbot = (whatsappId: number): Session => {
   return sessions[sessionIndex];
 };
 
+/**
+ * Remueve una sesión de WhatsApp
+ */
 export const removeWbot = async (
   whatsappId: number,
   isLogout = true
@@ -53,11 +51,13 @@ export const removeWbot = async (
   try {
     const sessionIndex = sessions.findIndex(s => s.id === whatsappId);
     if (sessionIndex !== -1) {
+      const session = sessions[sessionIndex];
+      
       if (isLogout) {
-        sessions[sessionIndex].logout();
-        sessions[sessionIndex].ws.close();
+        await session.logout();
       }
-
+      
+      await session.destroy();
       sessions.splice(sessionIndex, 1);
     }
   } catch (err) {
@@ -65,6 +65,9 @@ export const removeWbot = async (
   }
 };
 
+/**
+ * Reinicia todas las sesiones de una compañía
+ */
 export const restartWbot = async (
   companyId: number,
   session?: any
@@ -77,272 +80,240 @@ export const restartWbot = async (
       attributes: ["id"],
     }
 
-    const whatsapp = await Whatsapp.findAll(options);
+    const whatsapps = await Whatsapp.findAll(options);
 
-    whatsapp.map(async c => {
-      const sessionIndex = sessions.findIndex(s => s.id === c.id);
+    for (const whatsapp of whatsapps) {
+      const sessionIndex = sessions.findIndex(s => s.id === whatsapp.id);
       if (sessionIndex !== -1) {
-        sessions[sessionIndex].ws.close();
+        await sessions[sessionIndex].destroy();
+        sessions.splice(sessionIndex, 1);
       }
-
-    });
+    }
 
   } catch (err) {
     logger.error(err);
   }
 };
 
+/**
+ * Crea la configuración de autenticación para una sesión
+ */
+const createAuthStrategy = (whatsapp: Whatsapp) => {
+  const sessionPath = path.join(process.cwd(), '.wwebjs_auth', `session-${whatsapp.id}`);
+  
+  // Crear directorio si no existe
+  if (!fs.existsSync(sessionPath)) {
+    fs.mkdirSync(sessionPath, { recursive: true });
+  }
+
+  return new LocalAuth({
+    clientId: `whatsapp-${whatsapp.id}`,
+    dataPath: sessionPath
+  });
+};
+
+/**
+ * Inicializa una nueva sesión de WhatsApp con whatsapp-web.js
+ */
 export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
   return new Promise(async (resolve, reject) => {
     try {
-      (async () => {
-        const io = getIO();
+      const io = getIO();
 
-        const whatsappUpdate = await Whatsapp.findOne({
-          where: { id: whatsapp.id }
-        });
+      const whatsappUpdate = await Whatsapp.findOne({
+        where: { id: whatsapp.id }
+      });
 
-        if (!whatsappUpdate) return;
+      if (!whatsappUpdate) {
+        reject(new Error("WhatsApp instance not found"));
+        return;
+      }
 
-        const { id, name, provider } = whatsappUpdate;
+      const { id, name, companyId } = whatsappUpdate;
 
-        const { version, isLatest } = await fetchLatestBaileysVersion();
-        const isLegacy = provider === "stable" ? true : false;
+      logger.info(`Starting WhatsApp session: ${name} (ID: ${id})`);
 
-        logger.info(`using WA v${version.join(".")}, isLatest: ${isLatest}`);
-        logger.info(`isLegacy: ${isLegacy}`);
-        logger.info(`Starting session ${name}`);
-        let retriesQrCode = 0;
-
-        let wsocket: Session = null;
-        const store = makeInMemoryStore({
-          logger: loggerBaileys
-        });
-
-        const { state, saveState } = await authState(whatsapp);
-
-        const msgRetryCounterCache = new NodeCache();
-        const userDevicesCache: CacheStore = new NodeCache();
-
-        wsocket = makeWASocket({
-          logger: loggerBaileys,
-          printQRInTerminal: false,
-          browser: [
-            process.env.BROWSER_CLIENT || "Whaticket",
-            process.env.BROWSER_NAME || "Chrome",
-            process.env.BROWSER_VERSION || "10.0"
+      let retriesQrCode = 0;
+      
+      // Configurar cliente de WhatsApp Web
+      const client: Session = new Client({
+        authStrategy: createAuthStrategy(whatsapp),
+        puppeteer: {
+          headless: true,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu',
+            '--disable-extensions',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding'
           ],
-          auth: {
-            creds: state.creds,
-            keys: makeCacheableSignalKeyStore(state.keys, logger),
-          },
-          version,
-          // defaultQueryTimeoutMs: 60000,
-          // retryRequestDelayMs: 250,
-          // keepAliveIntervalMs: 1000 * 60 * 10 * 3,
-          msgRetryCounterCache,
-          shouldIgnoreJid: jid => isJidBroadcast(jid),
+          timeout: 60000
+        },
+        webVersionCache: {
+          type: 'remote',
+          remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
+        }
+      }) as Session;
+
+      // Asignar propiedades personalizadas
+      client.id = whatsapp.id;
+      client.name = whatsapp.name;
+      client.companyId = whatsapp.companyId;
+
+      // Event: QR Code generado
+      client.on(Events.QR_RECEIVED, async (qr: string) => {
+        logger.info(`QR Code generated for session ${name}`);
+        
+        if (retriesQrCodeMap.get(id) && retriesQrCodeMap.get(id)! >= 3) {
+          await whatsappUpdate.update({
+            status: "DISCONNECTED",
+            qrcode: ""
+          });
+
+          io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-whatsappSession`, {
+            action: "update",
+            session: whatsappUpdate
+          });
+
+          await client.destroy();
+          retriesQrCodeMap.delete(id);
+          reject(new Error("Max QR code retries reached"));
+        } else {
+          retriesQrCode++;
+          retriesQrCodeMap.set(id, retriesQrCode);
+
+          await whatsappUpdate.update({
+            qrcode: qr,
+            status: "qrcode",
+            retries: retriesQrCode,
+            number: ""
+          });
+
+          // Agregar a sesiones si no existe
+          const sessionIndex = sessions.findIndex(s => s.id === whatsapp.id);
+          if (sessionIndex === -1) {
+            sessions.push(client);
+          }
+
+          io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-whatsappSession`, {
+            action: "update",
+            session: whatsappUpdate
+          });
+        }
+      });
+
+      // Event: Cliente listo/conectado
+      client.on(Events.READY, async () => {
+        logger.info(`WhatsApp session ${name} is ready!`);
+
+        const info = client.info;
+        const phoneNumber = info?.wid?.user || "";
+
+        await whatsappUpdate.update({
+          status: "CONNECTED",
+          qrcode: "",
+          retries: 0,
+          number: phoneNumber
         });
 
-        // wsocket = makeWASocket({
-        //   version,
-        //   logger: loggerBaileys,
-        //   printQRInTerminal: false,
-        //   auth: state as AuthenticationState,
-        //   generateHighQualityLinkPreview: false,
-        //   shouldIgnoreJid: jid => isJidBroadcast(jid),
-        //   browser: ["Chat", "Chrome", "10.15.7"],
-        //   patchMessageBeforeSending: (message) => {
-        //     const requiresPatch = !!(
-        //       message.buttonsMessage ||
-        //       // || message.templateMessage
-        //       message.listMessage
-        //     );
-        //     if (requiresPatch) {
-        //       message = {
-        //         viewOnceMessage: {
-        //           message: {
-        //             messageContextInfo: {
-        //               deviceListMetadataVersion: 2,
-        //               deviceListMetadata: {},
-        //             },
-        //             ...message,
-        //           },
-        //         },
-        //       };
-        //     }
+        io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-whatsappSession`, {
+          action: "update",
+          session: whatsappUpdate
+        });
 
-        //     return message;
-        //   },
-        // })
+        // Agregar a sesiones si no existe
+        const sessionIndex = sessions.findIndex(s => s.id === whatsapp.id);
+        if (sessionIndex === -1) {
+          sessions.push(client);
+        }
 
-        wsocket.ev.on(
-          "connection.update",
-          async ({ connection, lastDisconnect, qr }) => {
-            logger.info(`Socket ${name} Connection Update ${connection || ""} ${lastDisconnect || ""}`);
+        retriesQrCodeMap.delete(id);
+        resolve(client);
+      });
 
-            const disconect = (lastDisconnect?.error as Boom)?.output?.statusCode;
+      // Event: Autenticación exitosa
+      client.on(Events.AUTHENTICATED, () => {
+        logger.info(`WhatsApp session ${name} authenticated`);
+      });
 
-            if (connection === "close") {
-              if (disconect === 403) {
-                await whatsapp.update({ status: "PENDING", session: "", number: "" });
-                removeWbot(id, false);
+      // Event: Fallo de autenticación
+      client.on(Events.AUTHENTICATION_FAILURE, async (msg: string) => {
+        logger.error(`Authentication failure for session ${name}: ${msg}`);
+        
+        await whatsappUpdate.update({ 
+          status: "PENDING", 
+          session: "", 
+          number: "" 
+        });
 
-                await DeleteBaileysService(whatsapp.id);
+        io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-whatsappSession`, {
+          action: "update",
+          session: whatsappUpdate
+        });
 
-                io.to(`company-${whatsapp.companyId}-mainchannel`).emit(`company-${whatsapp.companyId}-whatsappSession`, {
-                  action: "update",
-                  session: whatsapp
-                });
-              }
+        removeWbot(id, false);
+        setTimeout(() => StartWhatsAppSession(whatsapp, companyId), 5000);
+      });
 
-              if (disconect !== DisconnectReason.loggedOut) {
-                removeWbot(id, false);
-                setTimeout(() => StartWhatsAppSession(whatsapp, whatsapp.companyId), 2000);
-              } else {
-                await whatsapp.update({ status: "PENDING", session: "", number: "" });
-                await DeleteBaileysService(whatsapp.id);
+      // Event: Cliente desconectado
+      client.on(Events.DISCONNECTED, async (reason: string) => {
+        logger.info(`WhatsApp session ${name} disconnected: ${reason}`);
+        
+        await whatsappUpdate.update({ 
+          status: "PENDING", 
+          session: "", 
+          number: "" 
+        });
 
-                io.to(`company-${whatsapp.companyId}-mainchannel`).emit(`company-${whatsapp.companyId}-whatsappSession`, {
-                  action: "update",
-                  session: whatsapp
-                });
-                removeWbot(id, false);
-                setTimeout(() => StartWhatsAppSession(whatsapp, whatsapp.companyId), 2000);
-              }
-            }
+        io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-whatsappSession`, {
+          action: "update",
+          session: whatsappUpdate
+        });
 
-            if (connection === "open") {
-              await whatsapp.update({
-                status: "CONNECTED",
-                qrcode: "",
-                retries: 0,
-                number:
-                  wsocket.type === "md"
-                    ? jidNormalizedUser((wsocket as WASocket).user.id).split("@")[0]
-                    : "-"
-              });
+        removeWbot(id, false);
+        
+        // Reconectar después de 2 segundos si no fue logout manual
+        if (reason !== 'LOGOUT') {
+          setTimeout(() => StartWhatsAppSession(whatsapp, companyId), 2000);
+        }
+      });
 
-              io.to(`company-${whatsapp.companyId}-mainchannel`).emit(`company-${whatsapp.companyId}-whatsappSession`, {
-                action: "update",
-                session: whatsapp
-              });
+      // Event: Cambio de estado de conexión  
+      client.on(Events.STATE_CHANGED, (state: string) => {
+        logger.info(`WhatsApp session ${name} state changed: ${state}`);
+      });
 
-              const sessionIndex = sessions.findIndex(
-                s => s.id === whatsapp.id
-              );
-              if (sessionIndex === -1) {
-                wsocket.id = whatsapp.id;
-                sessions.push(wsocket);
-              }
+      // Inicializar cliente
+      await client.initialize();
 
-              resolve(wsocket);
-            }
-
-            if (qr !== undefined) {
-              if (retriesQrCodeMap.get(id) && retriesQrCodeMap.get(id) >= 3) {
-                await whatsapp.update({
-                  status: "DISCONNECTED",
-                  qrcode: ""
-                });
-                await DeleteBaileysService(whatsapp.id);
-
-                io.to(`company-${whatsapp.companyId}-mainchannel`).emit("whatsappSession", {
-                  action: "update",
-                  session: whatsapp
-                });
-                wsocket.ev.removeAllListeners("connection.update");
-                wsocket.ws.close();
-                wsocket = null;
-                retriesQrCodeMap.delete(id);
-              } else {
-                logger.info(`Session QRCode Generate ${name}`);
-                retriesQrCodeMap.set(id, (retriesQrCode += 1));
-
-                await whatsapp.update({
-                  qrcode: qr,
-                  status: "qrcode",
-                  retries: 0,
-                  number: ""
-                });
-                const sessionIndex = sessions.findIndex(
-                  s => s.id === whatsapp.id
-                );
-
-                if (sessionIndex === -1) {
-                  wsocket.id = whatsapp.id;
-                  sessions.push(wsocket);
-                }
-
-                io.to(`company-${whatsapp.companyId}-mainchannel`).emit(`company-${whatsapp.companyId}-whatsappSession`, {
-                  action: "update",
-                  session: whatsapp
-                });
-              }
-            }
-          }
-        );
-        wsocket.ev.on("creds.update", saveState);
-
-        wsocket.ev.on(
-          "presence.update",
-          async ({ id: remoteJid, presences }) => {
-            try {
-              logger.debug(
-                { remoteJid, presences },
-                "Received contact presence"
-              );
-              if (!presences[remoteJid]?.lastKnownPresence) {
-                return;
-              }
-              const contact = await Contact.findOne({
-                where: {
-                  number: remoteJid.replace(/\D/g, ""),
-                  companyId: whatsapp.companyId
-                }
-              });
-              if (!contact) {
-                return;
-              }
-              const ticket = await Ticket.findOne({
-                where: {
-                  contactId: contact.id,
-                  whatsappId: whatsapp.id,
-                  status: {
-                    [Op.or]: ["open", "pending"]
-                  }
-                }
-              });
-
-              if (ticket) {
-                io.to(ticket.id.toString())
-                  .to(`company-${whatsapp.companyId}-${ticket.status}`)
-                  .to(`queue-${ticket.queueId}-${ticket.status}`)
-                  .emit(`company-${whatsapp.companyId}-presence`, {
-                    ticketId: ticket.id,
-                    presence: presences[remoteJid].lastKnownPresence
-                  });
-              }
-            } catch (error) {
-              logger.error(
-                { remoteJid, presences },
-                "presence.update: error processing"
-              );
-              if (error instanceof Error) {
-                logger.error(`Error: ${error.name} ${error.message}`);
-              } else {
-                logger.error(`Error was object of type: ${typeof error}`);
-              }
-            }
-          }
-        );
-
-        store.bind(wsocket.ev);
-      })();
     } catch (error) {
       Sentry.captureException(error);
-      console.log(error);
+      logger.error(`Error initializing WhatsApp session ${whatsapp.name}:`, error);
       reject(error);
     }
   });
 };
+
+// Función auxiliar para verificar si una sesión está activa
+export const isSessionActive = (whatsappId: number): boolean => {
+  const session = sessions.find(s => s.id === whatsappId);
+  return session ? session.info?.wid !== undefined : false;
+};
+
+// Función auxiliar para obtener información de la sesión
+export const getSessionInfo = (whatsappId: number) => {
+  const session = sessions.find(s => s.id === whatsappId);
+  return session ? session.info : null;
+};
+
+// Exportar sesiones para debug (solo desarrollo)
+if (process.env.NODE_ENV === 'development') {
+  (global as any).sessions = sessions;
+}

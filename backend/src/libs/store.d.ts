@@ -1,116 +1,58 @@
-import {
-  AnyWASocket,
-  BaileysEventEmitter,
-  Chat,
-  ConnectionState,
-  Contact,
-  GroupMetadata,
-  PresenceData,
-  proto,
-  WAMessageCursor,
-  WAMessageKey,
-  WALegacySocket
-} from "@adiwajshing/baileys";
-import KeyedDB from "@adiwajshing/keyed-db";
+// Store types for whatsapp-web.js compatibility
+// whatsapp-web.js maneja el store internamente, pero mantenemos estas interfaces
+// para compatibilidad con el código existente
+
+import { Chat as WWebChat, Contact as WWebContact, Message as WWebMessage } from 'whatsapp-web.js';
 
 export interface Store {
-  chats: KeyedDB<Chat, string>;
-  contacts: {
-    [_: string]: Contact;
-  };
-  messages: {
-    [_: string]: {
-      array: proto.IWebMessageInfo[];
-      get: (id: string) => proto.IWebMessageInfo;
-      upsert: (item: proto.IWebMessageInfo, mode: "append" | "prepend") => void;
-      update: (item: proto.IWebMessageInfo) => boolean;
-      remove: (item: proto.IWebMessageInfo) => boolean;
-      updateAssign: (
-        id: string,
-        update: Partial<proto.IWebMessageInfo>
-      ) => boolean;
-      clear: () => void;
-      filter: (contain: (item: proto.IWebMessageInfo) => boolean) => void;
-      toJSON: () => proto.IWebMessageInfo[];
-      fromJSON: (newItems: proto.IWebMessageInfo[]) => void;
-    };
-  };
-  groupMetadata: {
-    [_: string]: GroupMetadata;
-  };
-  state: ConnectionState;
-  presences: {
-    [id: string]: {
-      [participant: string]: PresenceData;
-    };
-  };
-  bind: (ev: BaileysEventEmitter) => void;
-  loadMessages: (
-    jid: string,
-    count: number,
-    cursor: WAMessageCursor,
-    sock: WALegacySocket | undefined
-  ) => Promise<proto.IWebMessageInfo[]>;
-  loadMessage: (
-    jid: string,
-    id: string,
-    sock: WALegacySocket | undefined
-  ) => Promise<proto.IWebMessageInfo>;
-  mostRecentMessage: (
-    jid: string,
-    sock: WALegacySocket | undefined
-  ) => Promise<proto.IWebMessageInfo>;
-  fetchImageUrl: (
-    jid: string,
-    sock: AnyWASocket | undefined
-  ) => Promise<string>;
-  fetchGroupMetadata: (
-    jid: string,
-    sock: AnyWASocket | undefined
-  ) => Promise<GroupMetadata>;
-  fetchBroadcastListInfo: (
-    jid: string,
-    sock: WALegacySocket | undefined
-  ) => Promise<GroupMetadata>;
-  fetchMessageReceipts: (
-    { remoteJid, id }: WAMessageKey,
-    sock: WALegacySocket | undefined
-  ) => Promise<proto.IUserReceipt[]>;
-  toJSON: () => {
-    chats: KeyedDB<Chat, string>;
-    contacts: {
-      [_: string]: Contact;
-    };
-    messages: {
-      [_: string]: {
-        array: proto.IWebMessageInfo[];
-        get: (id: string) => proto.IWebMessageInfo;
-        upsert: (
-          item: proto.IWebMessageInfo,
-          mode: "append" | "prepend"
-        ) => void;
-        update: (item: proto.IWebMessageInfo) => boolean;
-        remove: (item: proto.IWebMessageInfo) => boolean;
-        updateAssign: (
-          id: string,
-          update: Partial<proto.IWebMessageInfo>
-        ) => boolean;
-        clear: () => void;
-        filter: (contain: (item: proto.IWebMessageInfo) => boolean) => void;
-        toJSON: () => proto.IWebMessageInfo[];
-        fromJSON: (newItems: proto.IWebMessageInfo[]) => void;
-      };
-    };
-  };
-  fromJSON: (json: {
-    chats: Chat[];
-    contacts: {
-      [id: string]: Contact;
-    };
-    messages: {
-      [id: string]: proto.IWebMessageInfo[];
-    };
-  }) => void;
-  writeToFile: (path: string) => void;
-  readFromFile: (path: string) => void;
+  // Propiedades básicas para compatibilidad
+  chats: Map<string, WWebChat>;
+  contacts: Map<string, WWebContact>;
+  messages: Map<string, WWebMessage[]>;
+  
+  // Métodos de compatibilidad (implementación simplificada)
+  bind?: (client: any) => void;
+  loadMessages?: (chatId: string, count: number) => Promise<WWebMessage[]>;
+  loadMessage?: (chatId: string, messageId: string) => Promise<WWebMessage | null>;
+  
+  // Métodos de serialización
+  toJSON?: () => any;
+  fromJSON?: (data: any) => void;
+  writeToFile?: (path: string) => void;
+  readFromFile?: (path: string) => void;
 }
+
+// Interfaz simplificada para el nuevo sistema
+export interface WWebStore {
+  chats: WWebChat[];
+  contacts: WWebContact[];
+  recentMessages: WWebMessage[];
+}
+
+// Helper para crear un store mock para compatibilidad
+export const createMockStore = (): Store => {
+  return {
+    chats: new Map(),
+    contacts: new Map(), 
+    messages: new Map(),
+    
+    bind: () => {
+      // whatsapp-web.js maneja esto internamente
+    },
+    
+    loadMessages: async (chatId: string, count: number) => {
+      // Implementación simplificada - whatsapp-web.js maneja esto
+      return [];
+    },
+    
+    loadMessage: async (chatId: string, messageId: string) => {
+      // Implementación simplificada
+      return null;
+    },
+    
+    toJSON: () => ({}),
+    fromJSON: () => {},
+    writeToFile: () => {},
+    readFromFile: () => {}
+  };
+};

@@ -1,17 +1,12 @@
-import { WASocket } from "@whiskeysockets/baileys";
+import { Client } from 'whatsapp-web.js';
 import { getWbot } from "../libs/wbot";
 import GetDefaultWhatsApp from "./GetDefaultWhatsApp";
 import Ticket from "../models/Ticket";
-import { Store } from "../libs/store";
+import { ExtendedClient } from "../libs/wwebjs-types";
 
-type Session = WASocket & {
-  id?: number;
-  store?: Store;
-};
-
-const GetTicketWbot = async (ticket: Ticket): Promise<Session> => {
+const GetTicketWbot = async (ticket: Ticket): Promise<ExtendedClient> => {
   if (!ticket.whatsappId) {
-    const defaultWhatsapp = await GetDefaultWhatsApp(ticket.user.id);
+    const defaultWhatsapp = await GetDefaultWhatsApp(ticket.user?.id);
 
     await ticket.$set("whatsapp", defaultWhatsapp);
   }
