@@ -24,9 +24,14 @@ export interface ExtendedContact extends WWebContact {
   profilePicUrl?: string;
 }
 
-// Interfaz para chats extendida  
-export interface ExtendedChat extends Chat {
+// Interfaz para chats extendida - usar composición en lugar de herencia  
+export interface ExtendedChat {
   lastMessage?: Message;
+  // Propiedades básicas de Chat copiadas para evitar conflictos
+  id: string;
+  name: string;
+  isGroup: boolean;
+  participants?: any[];
 }
 
 // Tipos de eventos de WhatsApp Web JS

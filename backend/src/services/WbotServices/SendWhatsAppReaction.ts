@@ -1,29 +1,25 @@
-import { WAMessage } from "@whiskeysockets/baileys";
-import WALegacySocket from "@whiskeysockets/baileys";
+import { Message as WWebMessage } from 'whatsapp-web.js';
 import * as Sentry from "@sentry/node";
 import AppError from "../../errors/AppError";
 import GetTicketWbot from "../../helpers/GetTicketWbot";
 import Message from "../../models/Message";
 import Ticket from "../../models/Ticket";
-import SendWhatsAppMessage from "./SendWhatsAppMessage";
-import formatBody from "../../helpers/Mustache";
-import {getBodyMessage} from "./wbotMessageListener";
-import CreateMessageService from "../MessageServices/CreateMessageService";
 
 interface ReactionRequest {
   messageId: string;
   ticket: Ticket;
-  reactionType: string; // Exemplo: 'like', 'heart', etc.
+  reactionType: string; // Ejemplo: '❤️', '👍', '😂', etc.
 }
 
 const SendWhatsAppReaction = async ({
   messageId,
   ticket,
   reactionType
-}: ReactionRequest): Promise<WAMessage> => {
+}: ReactionRequest): Promise<WWebMessage | boolean> => {
   const wbot = await GetTicketWbot(ticket);
 
-  const number = `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`;
+  // Formatear número de contacto para whatsapp-web.js
+  const chatId = `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "c.us"}`;
 
   try {
     const messageToReact = await Message.findOne({
@@ -40,23 +36,29 @@ const SendWhatsAppReaction = async ({
       throw new AppError("ReactionType not found");
     }
 
-    const msgFound = JSON.parse(messageToReact.dataJson);
+    // Obtener el chat
+    const chat = await wbot.getChatById(chatId);
+    
+    // Buscar el mensaje en WhatsApp usando el wid almacenado
+    const messages = await chat.fetchMessages({ limit: 100 });
+    const targetMessage = messages.find(msg => 
+      msg.id._serialized === messageToReact.wid ||
+      msg.body === messageToReact.body
+    );
 
-    console.log(reactionType);
+    if (!targetMessage) {
+      throw new AppError("Message not found in WhatsApp chat");
+    }
 
-    const msg = await wbot.sendMessage(number, {
-      react: {
-        text: reactionType, // O tipo de reação
-        key: msgFound.key // A chave da mensagem original a qual a reação se refere
-      }
+    // Enviar reacción al mensaje
+    const reaction = await targetMessage.react(reactionType);
 
-    });
+    console.log(`Reaction ${reactionType} sent to message ${targetMessage.id._serialized}`);
 
-
-    return msg;
+    return reaction;
   } catch (err) {
     Sentry.captureException(err);
-    console.log(err);
+    console.error('Error sending WhatsApp reaction:', err);
     throw new AppError("ERR_SENDING_WAPP_REACTION");
   }
 };
