@@ -2193,7 +2193,7 @@ const filterMessages = (msg: WhatsAppMessage): boolean => {
 
 const wbotMessageListener = async (wbot: Session, companyId: number): Promise<void> => {
   try {
-    wbot.on(Events.MESSAGE_RECEIVED, async (message: WhatsAppMessage) => {
+    wbot.on('message', async (message: WhatsAppMessage) => {
       if (!filterMessages(message)) return;
 
       const messageExists = await Message.count({
@@ -2207,11 +2207,11 @@ const wbotMessageListener = async (wbot: Session, companyId: number): Promise<vo
       }
     });
 
-    wbot.on(Events.MESSAGE_ACK, async (message: WhatsAppMessage, ack: MessageAck) => {
-      await handleMsgAck(message, ack);
+    wbot.on('message_ack', async (message: WhatsAppMessage) => {
+      await handleMsgAck(message, message.ack);
     });
 
-    wbot.on(Events.MESSAGE_REVOKED_EVERYONE, async (message: WhatsAppMessage, revoked_msg: WhatsAppMessage) => {
+    wbot.on('message_revoked_everyone', async (message: WhatsAppMessage, revoked_msg: WhatsAppMessage) => {
       if (message.from !== 'status@broadcast') {
         MarkDeleteWhatsAppMessage(message.from, null, message.id._serialized, companyId);
       }

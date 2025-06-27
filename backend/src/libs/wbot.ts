@@ -168,7 +168,7 @@ export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
       client.companyId = whatsapp.companyId;
 
       // Event: QR Code generado
-      client.on(Events.QR_RECEIVED, async (qr: string) => {
+      client.on('qr', async (qr: string) => {
         logger.info(`QR Code generated for session ${name}`);
         
         if (retriesQrCodeMap.get(id) && retriesQrCodeMap.get(id)! >= 3) {
@@ -210,7 +210,7 @@ export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
       });
 
       // Event: Cliente listo/conectado
-      client.on(Events.READY, async () => {
+      client.on('ready', async () => {
         logger.info(`WhatsApp session ${name} is ready!`);
 
         const info = client.info;
