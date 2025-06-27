@@ -183,9 +183,7 @@ const UpdateTicketService = async ({
 
         const queueChangedMessage = await wbot.sendMessage(
           `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
-          {
-            text: msgtxt
-          }
+          msgtxt
         );
         await verifyMessage(queueChangedMessage, ticket, ticket.contact);
       }
@@ -198,9 +196,7 @@ const UpdateTicketService = async ({
 
           const queueChangedMessage = await wbot.sendMessage(
             `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
-            {
-              text: msgtxt
-            }
+            msgtxt
           );
           await verifyMessage(queueChangedMessage, ticket, ticket.contact);
         }
@@ -214,9 +210,7 @@ const UpdateTicketService = async ({
 
             const queueChangedMessage = await wbot.sendMessage(
               `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
-              {
-                text: msgtxt
-              }
+              msgtxt
             );
             await verifyMessage(queueChangedMessage, ticket, ticket.contact);
           } else
@@ -228,9 +222,7 @@ const UpdateTicketService = async ({
 
               const queueChangedMessage = await wbot.sendMessage(
                 `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
-                {
-                  text: msgtxt
-                }
+                msgtxt
               );
               await verifyMessage(queueChangedMessage, ticket, ticket.contact);
             }      

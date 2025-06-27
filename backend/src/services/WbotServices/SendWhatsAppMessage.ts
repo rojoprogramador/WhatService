@@ -45,7 +45,7 @@ const SendWhatsAppMessage = async ({
           // Intentar encontrar el mensaje original en WhatsApp
           const messages = await chat.fetchMessages({ limit: 100 });
           const originalMessage = messages.find(msg => 
-            msg.id._serialized === chatMessages.wid ||
+            msg.id._serialized === (chatMessages as any).wid ||
             msg.body === chatMessages.body
           );
 

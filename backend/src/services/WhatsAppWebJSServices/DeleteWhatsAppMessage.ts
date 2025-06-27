@@ -46,8 +46,8 @@ const DeleteWhatsAppMessage = async (messageId: string): Promise<Message> => {
       const wwebMessage = messages.find(msg => 
         msg.id._serialized === messageId || 
         msg.id.id === messageId ||
-        msg.id._serialized === message.messageId ||
-        msg.id.id === message.messageId
+        msg.id._serialized === message.id ||
+        msg.id.id === message.id
       );
       
       if (wwebMessage) {

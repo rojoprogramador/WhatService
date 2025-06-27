@@ -42,7 +42,7 @@ const SendWhatsAppReaction = async ({
     // Buscar el mensaje en WhatsApp usando el wid almacenado
     const messages = await chat.fetchMessages({ limit: 100 });
     const targetMessage = messages.find(msg => 
-      msg.id._serialized === messageToReact.wid ||
+      msg.id._serialized === (messageToReact as any).wid ||
       msg.body === messageToReact.body
     );
 
@@ -55,7 +55,7 @@ const SendWhatsAppReaction = async ({
 
     console.log(`Reaction ${reactionType} sent to message ${targetMessage.id._serialized}`);
 
-    return reaction;
+    return true;
   } catch (err) {
     Sentry.captureException(err);
     console.error('Error sending WhatsApp reaction:', err);

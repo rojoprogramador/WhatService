@@ -1,128 +1,97 @@
-import { proto } from "@whiskeysockets/baileys";
+import { Message } from "whatsapp-web.js";
 
 // Função para extrair informações de mensagens de texto
-export const getTextMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.conversation;
+export const getTextMessage = (msg: Message) => {
+  return msg.body;
 };
 
 // Função para extrair informações de mensagens de imagem
-export const getImageMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.imageMessage?.caption || "Imagem";
+export const getImageMessage = (msg: Message) => {
+  return msg.body || "Imagem";
 };
 
 // Função para extrair informações de mensagens de vídeo
-export const getVideoMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.videoMessage?.caption || "Vídeo";
+export const getVideoMessage = (msg: Message) => {
+  return msg.body || "Vídeo";
 };
 
 // Função para extrair informações de mensagens de áudio
-export const getAudioMessage = (msg: proto.IWebMessageInfo) => {
+export const getAudioMessage = (msg: Message) => {
   return "Áudio";
 };
 
 // Função para extrair informações de mensagens de documento
-export const getDocumentMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.documentMessage?.fileName || "Documento";
+export const getDocumentMessage = (msg: Message) => {
+  return msg.body || "Documento";
 };
 
 // Função para extrair informações de mensagens de localização
-export const getLocationMessage = (msg: proto.IWebMessageInfo) => {
+export const getLocationMessage = (msg: Message) => {
+  if (msg.location) {
+    return {
+      latitude: msg.location.latitude,
+      longitude: msg.location.longitude
+    };
+  }
   return {
-    latitude: msg.message?.locationMessage?.degreesLatitude,
-    longitude: msg.message?.locationMessage?.degreesLongitude
+    latitude: null,
+    longitude: null
   };
 };
 
 // Função para extrair informações de mensagens de contato
-export const getContactMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.contactMessage?.displayName;
+export const getContactMessage = (msg: Message) => {
+  return msg.body || "Contato";
 };
 
 // Função para extrair informações de mensagens de botão
-export const getButtonsMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.buttonsResponseMessage?.selectedButtonId;
+export const getButtonsMessage = (msg: Message) => {
+  return msg.body;
 };
 
 // Função para extrair informações de mensagens de lista
-export const getListMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.listResponseMessage?.singleSelectReply?.selectedRowId;
+export const getListMessage = (msg: Message) => {
+  return msg.body;
 };
 
 // Função para extrair informações de mensagens de reação
-export const getReactionMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.reactionMessage?.text;
+export const getReactionMessage = (msg: Message) => {
+  return msg.body || "Reação";
 };
 
 // Função para extrair informações de mensagens de adesivo (sticker)
-export const getStickerMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.stickerMessage;
+export const getStickerMessage = (msg: Message) => {
+  return "Sticker";
 };
 
 // Função para extrair informações de mensagens de modelo (template)
-export const getTemplateMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.templateMessage?.hydratedTemplate?.hydratedContentText;
+export const getTemplateMessage = (msg: Message) => {
+  return msg.body || "Template";
 };
 
 // Função para extrair informações de mensagens de pagamento
-export const getPaymentMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.sendPaymentMessage?.noteMessage;
+export const getPaymentMessage = (msg: Message) => {
+  return msg.body || "Pagamento";
 };
 
 // Função para extrair informações de mensagens de convite de grupo
-export const getGroupInviteMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.groupInviteMessage?.groupName;
+export const getGroupInviteMessage = (msg: Message) => {
+  return msg.body || "Convite de grupo";
 };
 
 // Função para extrair informações de mensagens de chamada
-export const getCallMessage = (msg: proto.IWebMessageInfo) => {
-  return msg.message?.bcallMessage?.sessionId;
+export const getCallMessage = (msg: Message) => {
+  return "Chamada";
 };
 
-export const getViewOnceMessage = (msg: proto.IWebMessageInfo): string => {
-  if (msg.key.fromMe && msg?.message?.viewOnceMessage?.message?.buttonsMessage?.contentText) {
-    let bodyMessage = `*${msg?.message?.viewOnceMessage?.message?.buttonsMessage?.contentText}*`;
-    for (const buton of msg.message?.viewOnceMessage?.message?.buttonsMessage?.buttons) {
-      bodyMessage += `\n\n${buton.buttonText?.displayText}`;
-    }
-    return bodyMessage;
-  }
-  if (msg.key.fromMe && msg?.message?.viewOnceMessage?.message?.listMessage) {
-    let bodyMessage = `*${msg?.message?.viewOnceMessage?.message?.listMessage?.description}*`;
-    for (const buton of msg.message?.viewOnceMessage?.message?.listMessage?.sections) {
-      for (const rows of buton.rows) {
-        bodyMessage += `\n\n${rows.title}`;
-      }
-    }
-    return bodyMessage;
-  }
+export const getViewOnceMessage = (msg: Message): string => {
+  return msg.body || "Mensagem visualizada uma vez";
 };
 
-export const getAd = (msg: proto.IWebMessageInfo): string => {
-  if (msg.key.fromMe && msg.message?.listResponseMessage?.contextInfo?.externalAdReply) {
-    let bodyMessage = `*${msg.message?.listResponseMessage?.contextInfo?.externalAdReply?.title}*`;
-    bodyMessage += `\n\n${msg.message?.listResponseMessage?.contextInfo?.externalAdReply?.body}`;
-    return bodyMessage;
-  }
+export const getAd = (msg: Message): string => {
+  return msg.body || "Anúncio";
 };
 
-export const getBodyButton = (msg: proto.IWebMessageInfo): string => {
-  if (msg.key.fromMe && msg?.message?.viewOnceMessage?.message?.buttonsMessage?.contentText) {
-    let bodyMessage = `*${msg?.message?.viewOnceMessage?.message?.buttonsMessage?.contentText}*`;
-
-    for (const buton of msg.message?.viewOnceMessage?.message?.buttonsMessage?.buttons) {
-      bodyMessage += `\n\n${buton.buttonText?.displayText}`;
-    }
-    return bodyMessage;
-  }
-
-  if (msg.key.fromMe && msg?.message?.viewOnceMessage?.message?.listMessage) {
-    let bodyMessage = `*${msg?.message?.viewOnceMessage?.message?.listMessage?.description}*`;
-    for (const buton of msg.message?.viewOnceMessage?.message?.listMessage?.sections) {
-      for (const rows of buton.rows) {
-        bodyMessage += `\n\n${rows.title}`;
-      }
-    }
-
-    return bodyMessage;
-  }
+export const getBodyButton = (msg: Message): string => {
+  return msg.body || "Botão";
 };

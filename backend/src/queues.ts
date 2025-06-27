@@ -697,7 +697,7 @@ async function handleDispatchCampaign(job) {
       return;
     }
 
-    if (!wbot?.user?.id) {
+    if (!wbot?.info?.wid?.user) {
       logger.error(`campaignQueue -> DispatchCampaign -> error: wbot user not found`);
       return;
     }
@@ -746,15 +746,11 @@ async function handleDispatchCampaign(job) {
     }
     else {
       if (campaign.confirmation && campaignShipping.confirmation === null) {
-        await wbot.sendMessage(chatId, {
-          text: body
-        });
+        await wbot.sendMessage(chatId, body);
         await campaignShipping.update({ confirmationRequestedAt: moment() });
       } else {
 
-        await wbot.sendMessage(chatId, {
-          text: body
-        });
+        await wbot.sendMessage(chatId, body);
       }
     }
     await campaignShipping.update({ deliveredAt: moment() });

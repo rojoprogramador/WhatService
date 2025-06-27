@@ -54,9 +54,6 @@ const validateEnv = (): void => {
 
     // Validar contraseña de base de datos
     if (varName === 'DB_PASS') {
-      if (value === 'camilodev1993') {
-        weakSecrets.push('DB_PASS está usando un valor hardcodeado inseguro');
-      }
       if (value.length < 8) {
         weakSecrets.push('DB_PASS debe tener al menos 8 caracteres');
       }

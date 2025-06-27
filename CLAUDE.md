@@ -9,16 +9,16 @@ Whaticket is a multi-tenant WhatsApp ticketing system built with Node.js/TypeScr
 ## Node.js Version Requirements
 
 **Critical**: This project requires specific Node.js versions due to compatibility constraints:
-- **Backend**: Node.js v16.x (required for modern syntax like `||=` operator)
-- **Frontend**: Node.js v14.21.3 (required for React Scripts 3.4.3 compatibility)
+- **Backend**: Node.js v18.x+ (required for whatsapp-web.js library compatibility)
+- **Frontend**: Node.js v16.x+ (updated from v14.21.3 after dependency migration)
 
 Always verify and switch Node.js versions before development:
 ```bash
 # For backend work
-nvm use 16
+nvm use 18
 
 # For frontend work  
-nvm use 14.21.3
+nvm use 16
 ```
 
 ## Development Commands

@@ -41,7 +41,7 @@ const EditWhatsAppMessage = async ({
     // Buscar el mensaje en WhatsApp usando el wid almacenado
     const messages = await chat.fetchMessages({ limit: 100 });
     const targetMessage = messages.find(msg => 
-      msg.id._serialized === message.wid ||
+      msg.id._serialized === (message as any).wid ||
       msg.body === message.body
     );
 

@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import "express-async-errors";
+import path from "path";
 import "reflect-metadata";
 import "./bootstrap";
 
@@ -36,7 +37,18 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(Sentry.Handlers.requestHandler());
 app.use("/public", express.static(uploadConfig.directory));
+
+// Servir frontend compilado
+app.use(express.static(path.join(__dirname, "../../frontend/build")));
+
 app.use(routes);
+
+// Catch all handler: send back React's index.html file para SPA routing
+app.get("*", (req, res) => {
+  if (!req.path.startsWith("/api")) {
+    res.sendFile(path.join(__dirname, "../../frontend/build/index.html"));
+  }
+});
 
 app.use(Sentry.Handlers.errorHandler());
 

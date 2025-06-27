@@ -1,8 +1,4 @@
-import {
-  WASocket,
-  BinaryNode,
-  Contact as BContact,
-} from "@whiskeysockets/baileys";
+import { Client } from "whatsapp-web.js";
 import * as Sentry from "@sentry/node";
 
 import { Op } from "sequelize";
@@ -13,16 +9,16 @@ import Setting from "../../models/Setting";
 import Ticket from "../../models/Ticket";
 import Whatsapp from "../../models/Whatsapp";
 import { logger } from "../../utils/logger";
-import createOrUpdateBaileysService from "../BaileysServices/CreateOrUpdateBaileysService";
+// import createOrUpdateBaileysService from "../BaileysServices/CreateOrUpdateBaileysService"; // No longer needed for whatsapp-web.js
 import CreateMessageService from "../MessageServices/CreateMessageService";
 
-type Session = WASocket & {
+type Session = Client & {
   id?: number;
   store?: Store;
 };
 
 interface IContact {
-  contacts: BContact[];
+  contacts: any[];
 }
 
 const wbotMonitor = async (
@@ -31,81 +27,83 @@ const wbotMonitor = async (
   companyId: number
 ): Promise<void> => {
   try {
-    wbot.ws.on("CB:call", async (node: BinaryNode) => {
-      const content = node.content[0] as any;
+    // Escuchar eventos de llamadas con whatsapp-web.js
+    wbot.on('call', async (call) => {
+      const sendMsgCall = await Setting.findOne({
+        where: { key: "call", companyId },
+      });
 
-      if (content.tag === "offer") {
-        const { from, id } = node.attrs;
+      if (sendMsgCall?.value === "disabled") {
+        const from = call.from.replace('@c.us', '');
+        
+        // Rechazar la llamada
+        await call.reject();
+        
+        // Enviar mensaje automático
+        await wbot.sendMessage(call.from, 
+          "*Mensagem Automática:*\n\nAs chamadas de voz e vídeo estão desabilitas para esse WhatsApp, favor enviar uma mensagem de texto. Obrigado"
+        );
 
-      }
+        const number = from.replace(/\D/g, "");
 
-      if (content.tag === "terminate") {
-        const sendMsgCall = await Setting.findOne({
-          where: { key: "call", companyId },
+        const contact = await Contact.findOne({
+          where: { companyId, number },
         });
 
-        if (sendMsgCall.value === "disabled") {
-          await wbot.sendMessage(node.attrs.from, {
-            text:
-              "*Mensagem Automática:*\n\nAs chamadas de voz e vídeo estão desabilitas para esse WhatsApp, favor enviar uma mensagem de texto. Obrigado",
-          });
+        if (!contact) return;
 
-          const number = node.attrs.from.replace(/\D/g, "");
-
-          const contact = await Contact.findOne({
-            where: { companyId, number },
-          });
-
-          const ticket = await Ticket.findOne({
-            where: {
-              contactId: contact.id,
-              whatsappId: wbot.id,
-              //status: { [Op.or]: ["close"] },
-              companyId
-            },
-          });
-          // se não existir o ticket não faz nada.
-          if (!ticket) return;
-
-          const date = new Date();
-          const hours = date.getHours();
-          const minutes = date.getMinutes();
-
-          const body = `Chamada de voz/vídeo perdida às ${hours}:${minutes}`;
-          const messageData = {
-            id: content.attrs["call-id"],
-            ticketId: ticket.id,
+        const ticket = await Ticket.findOne({
+          where: {
             contactId: contact.id,
-            body,
-            fromMe: false,
-            mediaType: "call_log",
-            read: true,
-            quotedMsgId: null,
-            ack: 1,
-          };
+            whatsappId: wbot.id,
+            companyId
+          },
+        });
+        
+        // se não existir o ticket não faz nada.
+        if (!ticket) return;
 
+        const date = new Date();
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+
+        const body = `Chamada de voz/vídeo perdida às ${hours}:${minutes}`;
+        const messageData = {
+          id: call.id || `call_${Date.now()}`,
+          ticketId: ticket.id,
+          contactId: contact.id,
+          body,
+          fromMe: false,
+          mediaType: "call_log",
+          read: true,
+          quotedMsgId: null,
+          ack: 1,
+        };
+
+        await ticket.update({
+          lastMessage: body,
+        });
+
+        if(ticket.status === "closed") {
           await ticket.update({
-            lastMessage: body,
+            status: "pending",
           });
-
-
-          if(ticket.status === "closed") {
-            await ticket.update({
-              status: "pending",
-            });
-          }
-
-          return CreateMessageService({ messageData, companyId: companyId });
         }
+
+        return CreateMessageService({ messageData, companyId: companyId });
       }
     });
 
-    wbot.ev.on("contacts.upsert", async (contacts: BContact[]) => {
-
-      await createOrUpdateBaileysService({
-        whatsappId: whatsapp.id,
-        contacts,
-      });
+    // Escuchar cambios en contactos
+    wbot.on('contact_changed', async (contact) => {
+      // Para whatsapp-web.js no necesitamos el servicio de Baileys
+      // Los contactos se manejan directamente
+      try {
+        // Opcional: logging o manejo de contactos actualizado
+        logger.info(`Contact changed: ${contact.id._serialized}`);
+      } catch (err) {
+        logger.error('Error handling contact change:', err);
+      }
     });
 
   } catch (err) {

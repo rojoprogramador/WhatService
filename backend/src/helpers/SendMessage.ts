@@ -35,7 +35,7 @@ export const SendMessage = async (
       }
     } else {
       const body = `\u200e ${messageData.body}`;
-      message = await wbot.sendMessage(chatId, { text: body });
+      message = await wbot.sendMessage(chatId, body);
     }
 
     return message;

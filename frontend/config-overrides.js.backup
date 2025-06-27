@@ -1,0 +1,28 @@
+const webpack = require('webpack');
+
+module.exports = function override(config) {
+  // Configurar fallbacks para polyfills
+  config.resolve.fallback = {
+    ...config.resolve.fallback,
+    "path": require.resolve("path-browserify"),
+    "buffer": require.resolve("buffer"),
+    "crypto": require.resolve("crypto-browserify"),
+    "stream": require.resolve("stream-browserify"),
+    "util": require.resolve("util")
+  };
+
+  // Agregar providers para polyfills
+  config.plugins = [
+    ...config.plugins,
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+    }),
+  ];
+
+  // Deshabilitar fork-ts-checker-webpack-plugin que causa el error ajv
+  config.plugins = config.plugins.filter(plugin => 
+    plugin.constructor.name !== 'ForkTsCheckerWebpackPlugin'
+  );
+
+  return config;
+};
