@@ -120,6 +120,11 @@ const SocketManager = {
         pingTimeout: 18000,
         pingInterval: 18000,
         query: { token },
+        forceNew: true,
+        reconnection: true,
+        timeout: 5000,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
       });
 
       this.currentSocket.io.on("reconnect_attempt", () => {
@@ -134,6 +139,10 @@ const SocketManager = {
         }
       });
       
+      this.currentSocket.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+      });
+
       this.currentSocket.on("disconnect", (reason) => {
         console.warn(`socket disconnected because: ${reason}`);
         if (reason.startsWith("io server disconnect")) {
