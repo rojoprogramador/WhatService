@@ -185,19 +185,28 @@ const MainListItems = (props) => {
   useEffect(() => {
     async function fetchData() {
       const companyId = user.companyId;
-      const planConfigs = await getPlanCompany(undefined, companyId);
-
-      setShowCampaigns(planConfigs.plan.useCampaigns);
-      setShowKanban(planConfigs.plan.useKanban);
-      setShowOpenAi(planConfigs.plan.useOpenAi);
-      setShowIntegrations(planConfigs.plan.useIntegrations);
-      setShowSchedules(planConfigs.plan.useSchedules);
-      setShowInternalChat(planConfigs.plan.useInternalChat);
-      setShowExternalApi(planConfigs.plan.useExternalApi);
+      if (!companyId) {
+        return;
+      }
+      
+      try {
+        const planConfigs = await getPlanCompany(undefined, companyId);
+        if (planConfigs && planConfigs.plan) {
+          setShowCampaigns(planConfigs.plan.useCampaigns);
+          setShowKanban(planConfigs.plan.useKanban);
+          setShowOpenAi(planConfigs.plan.useOpenAi);
+          setShowIntegrations(planConfigs.plan.useIntegrations);
+          setShowSchedules(planConfigs.plan.useSchedules);
+          setShowInternalChat(planConfigs.plan.useInternalChat);
+          setShowExternalApi(planConfigs.plan.useExternalApi);
+        }
+      } catch (error) {
+        console.error('Error fetching plan configs:', error);
+      }
     }
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user.companyId]);
 
 
 

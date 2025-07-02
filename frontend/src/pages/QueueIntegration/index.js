@@ -125,17 +125,25 @@ const QueueIntegration = () => {
 
   useEffect(() => {
     async function fetchData() {
-      const planConfigs = await getPlanCompany(undefined, companyId);
-      if (!planConfigs.plan.useIntegrations) {
-        toast.error("Esta empresa não possui permissão para acessar essa página! Estamos lhe redirecionando.");
-        setTimeout(() => {
-          history.push(`/`)
-        }, 1000);
+      if (!companyId) {
+        return;
+      }
+      
+      try {
+        const planConfigs = await getPlanCompany(undefined, companyId);
+        if (planConfigs && planConfigs.plan && !planConfigs.plan.useIntegrations) {
+          toast.error("Esta empresa não possui permissão para acessar essa página! Estamos lhe redirecionando.");
+          setTimeout(() => {
+            history.push(`/`)
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Error fetching plan configs:', error);
       }
     }
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [companyId]);
 
   useEffect(() => {
     dispatch({ type: "RESET" });

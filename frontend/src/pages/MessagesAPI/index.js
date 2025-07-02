@@ -45,12 +45,20 @@ const MessagesAPI = () => {
   useEffect(() => {
     async function fetchData() {
       const companyId = localStorage.getItem("companyId");
-      const planConfigs = await getPlanCompany(undefined, companyId);
-      if (!planConfigs.plan.useExternalApi) {
-        toast.error("Esta empresa não possui permissão para acessar essa página! Estamos lhe redirecionando.");
-        setTimeout(() => {
-          history.push(`/`)
-        }, 1000);
+      if (!companyId || companyId === 'null' || companyId === 'undefined') {
+        return;
+      }
+      
+      try {
+        const planConfigs = await getPlanCompany(undefined, companyId);
+        if (planConfigs && planConfigs.plan && !planConfigs.plan.useExternalApi) {
+          toast.error("Esta empresa não possui permissão para acessar essa página! Estamos lhe redirecionando.");
+          setTimeout(() => {
+            history.push(`/`)
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Error fetching plan configs:', error);
       }
     }
     fetchData();
