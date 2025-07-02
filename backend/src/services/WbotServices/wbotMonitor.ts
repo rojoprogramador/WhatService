@@ -40,9 +40,9 @@ const wbotMonitor = async (
         await call.reject();
         
         // Enviar mensaje automático
-        await wbot.sendMessage(call.from, 
-          "*Mensagem Automática:*\n\nAs chamadas de voz e vídeo estão desabilitas para esse WhatsApp, favor enviar uma mensagem de texto. Obrigado"
-        );
+        const { getLocalizedMessage } = await import("../../utils/i18n");
+        const automaticMessage = await getLocalizedMessage("CALL_DISABLED_MESSAGE", companyId);
+        await wbot.sendMessage(call.from, automaticMessage);
 
         const number = from.replace(/\D/g, "");
 
@@ -67,7 +67,10 @@ const wbotMonitor = async (
         const hours = date.getHours();
         const minutes = date.getMinutes();
 
-        const body = `Chamada de voz/vídeo perdida às ${hours}:${minutes}`;
+        const callLogMessage = await getLocalizedMessage("CALL_LOG_MESSAGE", companyId, {
+          time: `${hours}:${minutes}`
+        });
+        const body = callLogMessage;
         const messageData = {
           id: call.id || `call_${Date.now()}`,
           ticketId: ticket.id,
