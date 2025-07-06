@@ -301,107 +301,157 @@ The **WhatsAppController** (node:WhatsAppController_WC1) is responsible for hand
     *   **`remove` (Delete):** Deletes a WhatsApp account and removes its associated WhatsApp bot session by calling `DeleteWhatsAppService` and `removeWbot`. (file:backend/src/controllers/WhatsAppController.ts:148)
     *   **`restart`:** Allows an administrator to restart the WhatsApp bot for a given company by calling `restartWbot`. (file:backend/src/controllers/WhatsAppController.ts:170)
     *   **Real-time Updates:** Uses `socket.io` (`getIO()`) to emit real-time updates to connected clients when WhatsApp accounts are created, updated, or deleted, ensuring the frontend is always synchronized. (file:backend/src/controllers/WhatsAppController.ts:92, file:backend/src/controllers/WhatsAppController.ts:132, file:backend/src/controllers/WhatsAppController.ts:160)
+*
 
-### WhatsappService (file:backend/src/services/WhatsappService.ts)
+---
 
-The **WhatsappService** (node:WhatsappService_WS1) directory contains services responsible for the persistence and retrieval of WhatsApp account data.
+## Research Query
 
-*   **Purpose:** Encapsulates the **business logic** related to retrieving and managing WhatsApp account data from the database.
-*   **Key Functionalities (examples from the directory):**
-    *   **`ShowWhatsAppService`:** Retrieves a `Whatsapp` model instance from the database based on its ID and company ID, including related `Queue` and `Prompt` data. (file:backend/src/services/WhatsappService.ts:8)
-    *   **`CreateWhatsAppService`:** Used by `WhatsAppController` to create new WhatsApp account entries in the database.
-    *   **`DeleteWhatsAppService`:** Used by `WhatsAppController` to delete WhatsApp account entries from the database.
+Investigate the "WhatsApp API" component in detail. Provide a comprehensive analysis of its architecture, responsibilities, and implementation details.
 
-### WbotServices (directory:backend/src/services/WbotServices/)
+*Session: 36a1f50efdc2899ed4e100fc516664c5 | Generated: 5/7/2025, 12:52:26*
 
-The **WbotServices** (node:WbotServices_WBS) directory contains services that directly interact with the WhatsApp Web API.
+### Analysis Summary
 
-*   **Purpose:** Manages the actual WhatsApp sessions, sends/receives messages, handles events, and maintains the connection to WhatsApp.
-*   **Key Functionalities:**
-    *   **`StartWhatsAppSession` (file:backend/src/services/WbotServices/StartWhatsAppSession.ts):** Initiates a new WhatsApp session, handling connection, authentication (QR code generation, session restoration), and setting up event listeners. It updates the WhatsApp account status in the database.
-    *   **`removeWbot`:** Disconnects and removes a WhatsApp bot instance from memory.
-    *   **`restartWbot`:** Restarts an existing WhatsApp bot session.
-    *   **`SendMessage.ts` (file:backend/src/services/WbotServices/SendMessage.ts):** Handles sending messages through an active WhatsApp session.
+The previous sub-search for `backend/src/services/WbotServices/index.ts` returned an error, indicating the file might not exist or the path was incorrect. However, the sub-search for `backend/src/services/WbotServices/providers.ts` was successful and provided valuable information about how `whatsapp-web.js` is used for sending messages.
 
-### WhatsApp Session Management Flow
+Given the information from the successful sub-searches, I can now synthesize a comprehensive report on the WhatsApp API component.
 
-1.  **Creation:** A user initiates a new WhatsApp session via the `WhatsAppController.store` endpoint. `CreateWhatsAppService` saves the account details to the database, and then `StartWhatsAppSession` is called to connect to WhatsApp Web, generate a QR code (if needed), and establish the session. Real-time updates on session status are emitted via WebSockets.
-2.  **Status Updates:** `StartWhatsAppSession` listens to events from the `whatsapp-web.js` library and updates the `status` field of the WhatsApp account in the database. `WhatsAppController` and `WhatsAppSessionController` also trigger status updates (e.g., `DISCONNECTED`) when sessions are explicitly removed or updated. These changes are broadcasted to the frontend via `socket.io`.
-3.  **Deletion:** When a user requests to delete a WhatsApp session via `WhatsAppController.remove`, `DeleteWhatsAppService` removes the account from the database, and `removeWbot` clears the in-memory WhatsApp bot instance. The frontend is notified of the deletion via WebSockets.
+# WhatsApp API Component Analysis
 
-## Low-Level Implementation Details: Message Sending and Receiving
+The WhatsApp API component in this codebase is primarily responsible for managing WhatsApp accounts, handling communication with the WhatsApp Web API, and integrating WhatsApp functionalities into the overall system. It is built around the `whatsapp-web.js` library and is structured into several key modules within the `backend` directory.
 
-### Message Sending
+## High-Level Architecture
 
-Message sending is handled by two primary services within `backend/src/services/WbotServices/`:
+The WhatsApp integration follows a layered architecture, with distinct responsibilities assigned to different components:
 
-#### **`SendWhatsAppMessage.ts`** (file:backend/src/services/WbotServices/SendWhatsAppMessage.ts)
+*   **[WhatsAppController.ts](file:backend/src/controllers/WhatsAppController.ts)**: This acts as the **API endpoint** for managing WhatsApp accounts.
+    *   **Purpose:** Handles incoming HTTP requests related to WhatsApp accounts (e.g., creating, listing, showing, updating, and deleting accounts).
+    *   **Internal Parts:** Contains methods for handling various HTTP verbs (GET, POST, PUT, DELETE) for WhatsApp account resources.
+    *   **External Relationships:**
+        *   Receives requests from the frontend.
+        *   Orchestrates calls to the `WhatsappService` for business logic.
+        *   Manages real-time updates to the frontend via WebSockets (using `getIO()`) to reflect changes in WhatsApp session status.
+        *   Initiates WhatsApp session startup by calling `StartWhatsAppSession` from `WbotServices`.
+        *   Provides an endpoint to restart WhatsApp sessions for a given company.
+        *   Directly calls `removeWbot` and `restartWbot` from [wbot.ts](file:backend/src/libs/wbot.ts) to manage sessions.
 
-*   **`SendWhatsAppMessage`** (node:SendWhatsAppMessage_SWM1): This is the core function for sending standard text messages.
-    *   It takes the message `body`, associated `ticket`, optional `quotedMsg` (for replies), and `isForwarded` as input.
-    *   It retrieves the `wbot` (WhatsApp bot instance) using `GetTicketWbot(ticket)`.
-    *   It formats the recipient's `chatId` and fetches the chat object.
-    *   It handles quoted messages by attempting to find the original message in WhatsApp's history.
-    *   Finally, it sends the message using `chat.sendMessage()` and updates the `lastMessage` field of the associated `ticket`.
+*   **[WhatsappService.ts](file:backend/src/services/WhatsappService.ts)**: This serves as the **business logic layer** for WhatsApp account management.
+    *   **Purpose:** Encapsulates the core business rules for creating, retrieving, updating, and deleting WhatsApp accounts.
+    *   **Internal Parts:** Contains service methods like `CreateWhatsAppService`, `ListWhatsAppsService`, `ShowWhatsAppService`, `UpdateWhatsAppService`, and `DeleteWhatsAppService`.
+    *   **External Relationships:**
+        *   Called by the `WhatsAppController` to perform operations on WhatsApp accounts.
+        *   Interacts with the database models (e.g., `Whatsapp`, `Queue`, `Prompt`) to persist and retrieve WhatsApp account information.
+        *   Performs data validation and ensures data integrity related to WhatsApp accounts.
 
-#### **`SendWhatsAppMedia.ts`** (file:backend/src/services/WbotServices/SendWhatsAppMedia.ts)
+*   **[wbot.ts](file:backend/src/libs/wbot.ts)**: This is the **core WhatsApp client management** module.
+    *   **Purpose:** Responsible for handling the actual connection and interaction with the WhatsApp Web API using the `whatsapp-web.js` library.
+    *   **Internal Parts:**
+        *   `initWASocket` [wbot.ts](file:backend/src/libs/wbot.ts:118): Initializes a new WhatsApp session, creates a `Client` instance from `whatsapp-web.js`, configures Puppeteer arguments, and sets up event listeners.
+        *   `sessions` array [wbot.ts](file:backend/src/libs/wbot.ts:24): Stores active WhatsApp client instances.
+        *   `getWbot` [wbot.ts](file:backend/src/libs/wbot.ts:35): Retrieves an active session by its WhatsApp ID.
+        *   `removeWbot` [wbot.ts](file:backend/src/libs/wbot.ts:47): Handles logging out and destroying a session.
+        *   `restartWbot` [wbot.ts](file:backend/src/libs/wbot.ts:71): Restarts all sessions for a given company.
+        *   `isSessionActive` [wbot.ts](file:backend/src/libs/wbot.ts:342): Checks if a session is active.
+        *   `getSessionInfo` [wbot.ts](file:backend/src/libs/wbot.ts:348): Retrieves session information.
+    *   **External Relationships:**
+        *   Directly interacts with the WhatsApp Web API via `whatsapp-web.js`.
+        *   Called by `StartWhatsAppSession` (which is called by `WhatsAppController`) to initiate new sessions.
+        *   Updates the `Whatsapp` model in the database with session status information (e.g., `qrcode`, `status`, `number`).
+        *   Emits real-time events (via `getIO()`) to the frontend about session status changes.
 
-*   **`SendWhatsAppMedia`** (node:SendWhatsAppMedia_SWM5): This is the primary function for sending media messages (images, videos, documents, audio).
-    *   It takes `media` (file object), `ticket`, optional `body` (caption), and `isForwarded` as input.
-    *   It retrieves the `wbot` and `chatId` similar to `SendWhatsAppMessage`.
-    *   **Audio Handling:** It includes `processAudio` (node:processAudio_SWM2) and `processAudioFile` (node:processAudioFile_SWM3) to convert audio files to MP3 format using `ffmpeg` before sending. Voice messages are sent with `sendAudioAsVoice: true`.
-    *   For other media types, it creates a `MessageMedia` object using `getMessageOptions` (node:getMessageOptions_SWM4) and sends it with an optional caption.
-    *   It updates the `lastMessage` of the `ticket` and deletes the original media file after successful sending.
+## Implementation Details
 
-### Message Receiving
+The WhatsApp API component heavily relies on the `whatsapp-web.js` library for its core functionalities.
 
-Message receiving is primarily managed by **`wbotMessageListener.ts`** (file:backend/src/services/WbotServices/wbotMessageListener.ts).
+### WhatsApp Client Initialization and Management
 
-#### **`wbotMessageListener.ts`** (file:backend/src/services/WbotServices/wbotMessageListener.ts)
+The `whatsapp-web.js` client is initialized and managed within [wbot.ts](file:backend/src/libs/wbot.ts).
 
-*   **`wbotMessageListener`** (node:wbotMessageListener_WML1): This function sets up event listeners for incoming WhatsApp messages (`message`), message acknowledgments (`message_ack`), and revoked messages (`message_revoked_everyone`). It acts as the central entry point for processing all incoming messages.
-    *   It calls `filterMessages(message)` (node:filterMessages_WML38) to filter out irrelevant messages.
-    *   It checks for duplicate messages and then dispatches new messages to `handleMessage`.
-    *   It also includes logic for campaign-related message handling (`verifyRecentCampaign` (node:verifyRecentCampaign_WML11) and `verifyCampaignMessageAndCloseTicket` (node:verifyCampaignMessageAndCloseTicket_WML12)).
-*   **`handleMessage`** (node:handleMessage_WML2): This is the core function for processing and saving incoming WhatsApp messages. It orchestrates various actions based on message content and context.
-    *   It performs initial checks using `isValidMsg` (node:isValidMsg_WML13).
-    *   It retrieves contact information using `getContactMessage` (node:getContactMessage_WML17) and `verifyContact` (node:verifyContact_WML18) (which creates/updates contacts in the database).
-    *   It manages unread message counts and finds or creates a `Ticket` for the conversation.
-    *   It handles media messages by calling `verifyMediaMessage` (node:verifyMediaMessage_WML3) to download and save media via `downloadMedia` (node:downloadMedia_WML5).
-    *   It processes text messages via `verifyMessage` (node:verifyMessage_WML4).
-    *   It integrates with external services like OpenAI (`handleOpenAi` (node:handleOpenAi_WML9)), N8N, and Typebot (`handleMessageIntegration` (node:handleMessageIntegration_WML10)).
-    *   It manages chatbot flows and queue assignments using `verifyQueue` (node:verifyQueue_WML7) and `handleChartbot` (node:handleChartbot_WML8).
-    *   It checks business hours and queue schedules to send automated "out of hours" messages.
-*   **`handleMsgAck`** (node:handleMsgAck_WML6): Updates the acknowledgment status (read, delivered) of messages in the database and emits real-time updates to the frontend.
-*   **Helper Functions:** The `wbotMessageListener.ts` file also contains numerous helper functions that support the main message processing flow, such as:
-    *   `getBodyMessage` (node:getBodyMessage_WML14): Extracts text content from various message types.
-    *   `getQuotedMessage` (node:getQuotedMessage_WML15) and `getQuotedMessageId` (node:getQuotedMessageId_WML16): Retrieve quoted message information.
-    *   `handleRating` (node:handleRating_WML20): Processes user ratings for tickets.
-    *   `convertTextToSpeechAndSaveToFile` (node:convertTextToSpeechAndSaveToFile_WML21) and `convertWavToAnotherFormat` (node:convertWavToAnotherFormat_WML22): Handle audio conversions.
-    *   `transferQueue` (node:transferQueue_WML24): Transfers a ticket to a different queue.
+*   **Underlying Library:** The `Client` class from `whatsapp-web.js` is imported and used [wbot.ts](file:backend/src/libs/wbot.ts:2).
+*   **Initialization Process (`initWASocket`):**
+    *   A new `Client` instance is created [wbot.ts](file:backend/src/libs/wbot.ts:139).
+    *   **Authentication:** `LocalAuth` is used for authentication [wbot.ts](file:backend/src/libs/wbot.ts:109), which stores session data in a local directory named `.wwebjs_auth` [wbot.ts](file:backend/src/libs/wbot.ts:102). This allows for persistent sessions without requiring re-authentication on every restart.
+    *   **Puppeteer Configuration:** Various Puppeteer arguments are passed to the `Client` constructor [wbot.ts](file:backend/src/libs/wbot.ts:141-158) to control the headless browser used by `whatsapp-web.js`. These arguments likely optimize performance and ensure compatibility across different environments.
+    *   **Web Version Cache:** A remote web version cache is utilized [wbot.ts](file:backend/src/libs/wbot.ts:159-162) to manage the WhatsApp Web version, ensuring the client uses a compatible version.
+    *   **Event Handling:** The `initWASocket` function sets up listeners for critical `whatsapp-web.js` events:
+        *   `qr`: Emitted when a QR code is generated for user authentication [wbot.ts](file:backend/src/libs/wbot.ts:176). The QR code data is then sent to the frontend via WebSockets.
+        *   `ready`: Indicates that the client is ready and connected to WhatsApp [wbot.ts](file:backend/src/libs/wbot.ts:218).
+        *   `authenticated`: Signifies successful authentication [wbot.ts](file:backend/src/libs/wbot.ts:279).
+        *   `authentication_failure`: Handles cases where authentication fails [wbot.ts](file:backend/src/libs/wbot.ts:284).
+        *   `disconnected`: Triggered when the client disconnects from WhatsApp [wbot.ts](file:backend/src/libs/wbot.ts:303).
+        *   `state_changed`: Provides updates on the client's connection state [wbot.ts](file:backend/src/libs/wbot.ts:326).
+    *   Finally, `client.initialize()` is called to start the WhatsApp client [wbot.ts](file:backend/src/libs/wbot.ts:331).
 
-In summary, the WhatsApp API component is a well-structured system that separates concerns into API handling, business logic, and direct WhatsApp interaction layers. It provides comprehensive functionality for managing WhatsApp accounts, sessions, and the sending and receiving of various message types, including advanced features like chatbot integration, campaign management, and external service integrations.
+### Message Sending Functionality
+
+The `whatsapp-web.js` client instance, managed by [wbot.ts](file:backend/src/libs/wbot.ts), is used by various services to send messages. The `provider` function in [providers.ts](file:backend/src/services/WbotServices/providers.ts:14) demonstrates this. It receives a `wbot` object (an instance of the `whatsapp-web.js` `Client`) and uses its `sendMessage()` method to send different types of messages, including text, media, and other specialized message formats. The extensive use of `wbot.sendMessage()` throughout [providers.ts](file:backend/src/services/WbotServices/providers.ts) indicates that this file likely centralizes the logic for constructing and sending various message types based on the application's needs.
+
+## Problemas Conocidos y Soluciones
+
+### Fix: Mensajes enviados desde celular no se muestran en conversación correcta
+
+**Problema Resuelto ✅ (Enero 2025)**
+
+**Descripción del Problema:**
+Los mensajes enviados desde el celular (respuestas directas desde WhatsApp móvil) no aparecían en la conversación correcta del cliente en el sistema, sino que se mostraban en una conversación separada.
+
+**Causa Raíz:**
+El problema estaba en la lógica de filtrado del frontend (`MessagesList/index.js`) que no manejaba correctamente los mensajes `fromMe` para asociarlos con la conversación del cliente correcto.
+
+**Solución Implementada:**
+- **Archivo modificado:** `frontend/src/components/MessagesList/index.js` líneas 459-547
+- **Cambio principal:** Mejorada la lógica de filtrado de mensajes en tiempo real vía Socket.IO
+
+```javascript
+// ANTES (incorrecto):
+const isSamePhoneNumber = data.message?.contact?.number === ticket?.contact?.number;
+
+// DESPUÉS (correcto):
+const messageFromMe = data.message?.fromMe;
+const messageTicketContactNumber = data.ticket?.contact?.number;
+const currentTicketContactNumber = ticket?.contact?.number;
+const isFromMeToSameContact = messageFromMe && 
+  messageTicketContactNumber === currentTicketContactNumber;
+
+const isSamePhoneNumber = !messageFromMe && 
+  data.message?.contact?.number === ticket?.contact?.number;
+
+const shouldAddMessage = isCorrectTicket || isFromMeToSameContact || isSamePhoneNumber;
+```
+
+**Lógica de la Solución:**
+1. **Para mensajes `fromMe`:** Compara el número del cliente del ticket del mensaje con el ticket actual
+2. **Para mensajes recibidos:** Mantiene la lógica original de comparar números de contacto
+3. **Resultado:** Los mensajes enviados desde el celular aparecen correctamente en la conversación del cliente
+
+**Beneficios:**
+- ✅ Mensajes desde celular se muestran en conversación correcta
+- ✅ No se crean conversaciones duplicadas
+- ✅ Historial de conversación completo
+- ✅ Experiencia de usuario mejorada
+
+## Conclusion
+
+The WhatsApp API component is a well-structured part of the system, clearly separating concerns between API handling, business logic, and the direct interaction with the WhatsApp Web API. The use of `whatsapp-web.js` and its event-driven architecture allows for robust session management and real-time communication capabilities. The `WbotServices` (specifically `providers.ts`) acts as an abstraction layer over the raw `whatsapp-web.js` client, providing specialized functions for sending different message types.
 
 ### Implementation Steps
 
-1. **Understanding the High-Level Architecture**
-   The WhatsApp API component is organized into a layered architecture. The `API Layer` handles external HTTP requests, acting as the entry point. The `Business Logic/Data Access Layer` manages core WhatsApp account data and persistence. The `WhatsApp Bot Interaction Layer` directly interfaces with the WhatsApp Web API for session management and message handling.
+1. **Understanding the WhatsApp API Component Architecture**
+   The WhatsApp API component is responsible for managing WhatsApp accounts, handling communication with the WhatsApp Web API, and integrating WhatsApp functionalities. It uses a layered architecture with distinct responsibilities for different components.
 
 2. **Exploring the WhatsAppController**
-   The `WhatsAppController` is the API endpoint handler for all WhatsApp-related operations. It receives HTTP requests, delegates business logic to appropriate services, and sends back responses. Its key functionalities include listing, creating, retrieving, updating, and deleting WhatsApp accounts. It also supports restarting WhatsApp bots and uses `socket.io` for real-time updates to connected clients.
+   The `WhatsAppController` acts as the API endpoint for managing WhatsApp accounts. It handles incoming HTTP requests, orchestrates calls to the `WhatsappService` for business logic, manages real-time updates to the frontend via WebSockets, and initiates WhatsApp session startup. It also directly manages sessions by calling `removeWbot` and `restartWbot`.
 
-3. **Delving into WhatsappService**
-   The `WhatsappService` directory contains services responsible for the persistence and retrieval of WhatsApp account data. Its purpose is to encapsulate the business logic related to managing WhatsApp account data from the database. Examples include `ShowWhatsAppService` for retrieving account details, `CreateWhatsAppService` for creating new entries, and `DeleteWhatsAppService` for removing accounts.
+3. **Delving into the WhatsappService**
+   The `WhatsappService` serves as the business logic layer for WhatsApp account management. It encapsulates core business rules for creating, retrieving, updating, and deleting WhatsApp accounts. It is called by the `WhatsAppController` and interacts with database models to persist and retrieve WhatsApp account information, performing data validation.
 
-4. **Understanding WbotServices for WhatsApp Interaction**
-   The `WbotServices` directory houses services that directly interact with the WhatsApp Web API. These services manage actual WhatsApp sessions, send and receive messages, handle events, and maintain the connection to WhatsApp. Key functionalities include `StartWhatsAppSession` for initiating sessions, `removeWbot` for disconnecting bot instances, `restartWbot` for restarting sessions, and `SendMessage.ts` for handling message sending.
+4. **Understanding the wbot Module**
+   The `wbot` module is the core WhatsApp client management module. It is responsible for handling the actual connection and interaction with the WhatsApp Web API using the `whatsapp-web.js` library. It initializes new WhatsApp sessions, stores active client instances, retrieves and removes active sessions, restarts sessions, and checks session activity. It also updates the `Whatsapp` model in the database with session status and emits real-time events to the frontend.
 
-5. **Tracing the WhatsApp Session Management Flow**
-   The WhatsApp session management flow involves several steps. Session creation is initiated via the `WhatsAppController`, which uses `CreateWhatsAppService` to save account details and then `StartWhatsAppSession` to connect to WhatsApp Web. Real-time updates are emitted via WebSockets. `StartWhatsAppSession` also listens for events to update the account status in the database, and these changes are broadcasted to the frontend. Session deletion, requested via the `WhatsAppController`, involves `DeleteWhatsAppService` to remove data and `removeWbot` to clear the in-memory bot instance, with frontend notification via WebSockets.
+5. **WhatsApp Client Initialization and Management**
+   The WhatsApp API component heavily relies on the `whatsapp-web.js` library. The `Client` class from `whatsapp-web.js` is used for initialization. `LocalAuth` is used for authentication, storing session data for persistent sessions. Puppeteer arguments are configured for the headless browser, and a remote web version cache is utilized. Event listeners are set up for `qr`, `ready`, `authenticated`, `authentication_failure`, `disconnected`, and `state_changed` events, and `client.initialize()` starts the WhatsApp client.
 
-6. **Understanding Message Sending Mechanisms**
-   Message sending is handled by two primary services within `WbotServices`. `SendWhatsAppMessage.ts` is responsible for sending standard text messages, handling message body, associated tickets, quoted messages, and forwarding. `SendWhatsAppMedia.ts` manages sending media messages (images, videos, documents, audio). It includes specific logic for audio handling, converting files to MP3 format using `ffmpeg` before sending, and creating `MessageMedia` objects for other media types. Both services update the `lastMessage` field of the associated ticket.
-
-7. **Exploring Message Receiving and Processing**
-   Message receiving is primarily managed by `wbotMessageListener.ts`. The `wbotMessageListener` function sets up event listeners for incoming messages, acknowledgments, and revoked messages, acting as the central entry point. It filters messages and dispatches new ones to `handleMessage`. The `handleMessage` function processes and saves incoming messages, performing checks, retrieving contact information, managing unread counts, and handling media and text messages. It also integrates with external services like OpenAI and manages chatbot flows. `handleMsgAck` updates message acknowledgment statuses and emits real-time updates. Numerous helper functions support the main message processing flow, such as extracting message content, handling quoted messages, processing ratings, and managing audio conversions.
+6. **Understanding Message Sending Functionality**
+   The `whatsapp-web.js` client instance, managed by `wbot`, is used by various services to send messages. A `provider` function demonstrates this by receiving a `wbot` object and using its `sendMessage()` method to send different types of messages, including text, media, and other specialized formats. This centralizes the logic for constructing and sending various message types.
 
