@@ -450,7 +450,7 @@ export default function Options(props) {
       <Grid spacing={3} container>
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="ratings-label">Avaliações</InputLabel>
+            <InputLabel id="ratings-label">{i18n.t("settings.options.ratings")}</InputLabel>
             <Select
               labelId="ratings-label"
               value={userRating}
@@ -458,18 +458,18 @@ export default function Options(props) {
                 handleChangeUserRating(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Desabilitadas</MenuItem>
-              <MenuItem value={"enabled"}>Habilitadas</MenuItem>
+              <MenuItem value={"disabled"}>{i18n.t("settings.options.ratingsDisabled")}</MenuItem>
+              <MenuItem value={"enabled"}>{i18n.t("settings.options.ratingsEnabled")}</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingUserRating && "Atualizando..."}
+              {loadingUserRating && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
             <InputLabel id="schedule-type-label">
-              Gerenciamento de Expediente
+              {i18n.t("settings.options.scheduleManagement")}
             </InputLabel>
             <Select
               labelId="schedule-type-label"
@@ -479,18 +479,18 @@ export default function Options(props) {
               }}
             >
               <MenuItem value={"disabled"}>{i18n.t("settings.disabled")}</MenuItem>
-              <MenuItem value={"queue"}>Fila</MenuItem>
-              <MenuItem value={"company"}>Empresa</MenuItem>
+              <MenuItem value={"queue"}>{i18n.t("settings.options.queue")}</MenuItem>
+              <MenuItem value={"company"}>{i18n.t("settings.options.company")}</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingScheduleType && "Atualizando..."}
+              {loadingScheduleType && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
             <InputLabel id="group-type-label">
-              Ignorar Mensagens de Grupos
+              {i18n.t("settings.options.ignoreGroupMessages")}
             </InputLabel>
             <Select
               labelId="group-type-label"
@@ -499,18 +499,18 @@ export default function Options(props) {
                 handleGroupType(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Desativado</MenuItem>
-              <MenuItem value={"enabled"}>Ativado</MenuItem>
+              <MenuItem value={"disabled"}>{i18n.t("settings.options.deactivated")}</MenuItem>
+              <MenuItem value={"enabled"}>{i18n.t("settings.options.activated")}</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingScheduleType && "Atualizando..."}
+              {loadingScheduleType && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
             <InputLabel id="call-type-label">
-              Aceitar Chamada
+              {i18n.t("settings.options.acceptCalls")}
             </InputLabel>
             <Select
               labelId="call-type-label"
@@ -519,18 +519,18 @@ export default function Options(props) {
                 handleCallType(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não Aceitar</MenuItem>
-              <MenuItem value={"enabled"}>Aceitar</MenuItem>
+              <MenuItem value={"disabled"}>{i18n.t("settings.options.doNotAccept")}</MenuItem>
+              <MenuItem value={"enabled"}>{i18n.t("settings.options.accept")}</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingCallType && "Atualizando..."}
+              {loadingCallType && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
        <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
             <InputLabel id="chatbot-type-label">
-              Tipo Chatbot
+              {i18n.t("settings.options.chatbotType")}
             </InputLabel>
             <Select
               labelId="chatbot-type-label"
@@ -539,19 +539,19 @@ export default function Options(props) {
                 handleChatbotType(e.target.value);
               }}
             >
-              <MenuItem value={"text"}>Texto</MenuItem>
+              <MenuItem value={"text"}>{i18n.t("settings.options.text")}</MenuItem>
 			 {/*<MenuItem value={"button"}>Botão</MenuItem>*/}
              {/*<MenuItem value={"list"}>Lista</MenuItem>*/}
             </Select>
             <FormHelperText>
-              {loadingChatbotType && "Atualizando..."}
+              {loadingChatbotType && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
 		{/* ENVIAR SAUDAÇÃO AO ACEITAR O TICKET */}
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="sendGreetingAccepted-label">Enviar saudação ao aceitar o ticket</InputLabel>
+            <InputLabel id="sendGreetingAccepted-label">{i18n.t("settings.options.sendGreetingAccepted")}</InputLabel>
             <Select
               labelId="sendGreetingAccepted-label"
               value={SendGreetingAccepted}
@@ -563,7 +563,7 @@ export default function Options(props) {
               <MenuItem value={"enabled"}>{i18n.t("settings.enabled")}</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingSendGreetingAccepted && "Atualizando..."}
+              {loadingSendGreetingAccepted && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -572,7 +572,7 @@ export default function Options(props) {
 		{/* ENVIAR MENSAGEM DE TRANSFERENCIA DE SETOR/ATENDENTE */}
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="sendMsgTransfTicket-label">Enviar mensagem de transferencia de Fila/agente</InputLabel>
+            <InputLabel id="sendMsgTransfTicket-label">{i18n.t("settings.options.sendTransferMessage")}</InputLabel>
             <Select
               labelId="sendMsgTransfTicket-label"
               value={SettingsTransfTicket}
@@ -584,7 +584,7 @@ export default function Options(props) {
               <MenuItem value={"enabled"}>{i18n.t("settings.enabled")}</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingSettingsTransfTicket && "Atualizando..."}
+              {loadingSettingsTransfTicket && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -592,7 +592,7 @@ export default function Options(props) {
 		{/* ENVIAR SAUDAÇÃO QUANDO HOUVER SOMENTE 1 FILA */}
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="sendGreetingMessageOneQueues-label">Enviar saudação quando houver somente 1 fila</InputLabel>
+            <InputLabel id="sendGreetingMessageOneQueues-label">{i18n.t("settings.options.sendGreetingOneQueue")}</InputLabel>
             <Select
               labelId="sendGreetingMessageOneQueues-label"
               value={sendGreetingMessageOneQueues}
@@ -604,7 +604,7 @@ export default function Options(props) {
               <MenuItem value={"enabled"}>{i18n.t("settings.enabled")}</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingSendGreetingMessageOneQueues && "Atualizando..."}
+              {loadingSendGreetingMessageOneQueues && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -636,7 +636,7 @@ export default function Options(props) {
             <Grid xs={12} sm={12} md={12} item>
                 <FormControl className={classes.selectContainer}>
                   <InputLabel id='allowregister-label'>
-                    Registro (Inscrição) Permitida?
+                    {i18n.t("settings.options.registerAllowed")}
                   </InputLabel>
                   <Select
                     labelId='allowregister-label'
@@ -645,8 +645,8 @@ export default function Options(props) {
                       handleallowregister(e.target.value);
                     }}
                   >
-                    <MenuItem value={'disabled'}>Não</MenuItem>
-                    <MenuItem value={'enabled'}>Sim</MenuItem>
+                    <MenuItem value={'disabled'}>{i18n.t("settings.options.no")}</MenuItem>
+                    <MenuItem value={'enabled'}>{i18n.t("settings.options.yes")}</MenuItem>
                   </Select>
                   <FormHelperText>
                     {loadingallowregister && 'Atualizando...'}
@@ -657,7 +657,7 @@ export default function Options(props) {
 				  <Grid xs={12} sm={12} md={12} item>
                 <FormControl className={classes.selectContainer}>
                   <InputLabel id='viewregister-label'>
-                    Registro (Inscrição) Visível?
+                    {i18n.t("settings.options.registerVisible")}
                   </InputLabel>
                   <Select
                     labelId='viewregister-label'
@@ -666,8 +666,8 @@ export default function Options(props) {
                       handleviewregister(e.target.value);
                     }}
                   >
-                    <MenuItem value={'disabled'}>Não</MenuItem>
-                    <MenuItem value={'enabled'}>Sim</MenuItem>
+                    <MenuItem value={'disabled'}>{i18n.t("settings.options.no")}</MenuItem>
+                    <MenuItem value={'enabled'}>{i18n.t("settings.options.yes")}</MenuItem>
                   </Select>
                   <FormHelperText>
                     {loadingviewregister && 'Atualizando...'}
@@ -677,7 +677,7 @@ export default function Options(props) {
 			  
 			                <Grid xs={12} sm={12} md={12} item>
                 <FormControl className={classes.selectContainer}>
-                  <InputLabel id='trial-label'>Tempo de Trial?</InputLabel>
+                  <InputLabel id='trial-label'>{i18n.t("settings.options.trialTime")}</InputLabel>
                   <Select
                     labelId='trial-label'
                     value={trial}
@@ -716,7 +716,7 @@ export default function Options(props) {
         >
           <Tab
 
-            label="INTEGRAÇÕES" />
+            label={i18n.t("settings.options.integrations")} />
 
         </Tabs>
 
@@ -751,7 +751,7 @@ export default function Options(props) {
             >
             </TextField>
             <FormHelperText>
-              {loadingIpIxcType && "Atualizando..."}
+              {loadingIpIxcType && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -770,7 +770,7 @@ export default function Options(props) {
             >
             </TextField>
             <FormHelperText>
-              {loadingTokenIxcType && "Atualizando..."}
+              {loadingTokenIxcType && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -803,7 +803,7 @@ export default function Options(props) {
             >
             </TextField>
             <FormHelperText>
-              {loadingIpMkauthType && "Atualizando..."}
+              {loadingIpMkauthType && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -822,7 +822,7 @@ export default function Options(props) {
             >
             </TextField>
             <FormHelperText>
-              {loadingClientIdMkauthType && "Atualizando..."}
+              {loadingClientIdMkauthType && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -841,7 +841,7 @@ export default function Options(props) {
             >
             </TextField>
             <FormHelperText>
-              {loadingClientSecrectMkauthType && "Atualizando..."}
+              {loadingClientSecrectMkauthType && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -874,7 +874,7 @@ export default function Options(props) {
             >
             </TextField>
             <FormHelperText>
-              {loadingAsaasType && "Atualizando..."}
+              {loadingAsaasType && i18n.t("settings.updating")}
             </FormHelperText>
           </FormControl>
         </Grid>
