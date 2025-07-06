@@ -71,6 +71,11 @@ const Ticket = () => {
   const socketManager = useContext(SocketContext);
 
   useEffect(() => {
+    if (!ticketId) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     const delayDebounceFn = setTimeout(() => {
       const fetchTicket = async () => {

@@ -423,8 +423,19 @@ const getSenderMessage = (
 };
 
 const getContactMessage = async (msg: WhatsAppMessage, wbot: Session) => {
-  const isGroup = msg.from.includes("@g.us");
-  const rawNumber = msg.from.replace(/\D/g, "");
+  // CORRECCIÓN: Para mensajes fromMe, usar el destinatario (msg.to) como contacto
+  const contactId = msg.fromMe ? msg.to : msg.from;
+  const isGroup = contactId.includes("@g.us");
+  const rawNumber = contactId.replace(/\D/g, "");
+  
+  console.log('👤 getContactMessage - Determining contact:', {
+    fromMe: msg.fromMe,
+    msgFrom: msg.from,
+    msgTo: msg.to,
+    selectedContactId: contactId,
+    isGroup,
+    rawNumber
+  });
   
   if (isGroup) {
     const chat = await msg.getChat() as GroupChat;
@@ -435,9 +446,21 @@ const getContactMessage = async (msg: WhatsAppMessage, wbot: Session) => {
     };
   } else {
     const contact = await msg.getContact();
+    
+    // Para mensajes fromMe, necesitamos obtener el contacto del destinatario
+    let actualContact = contact;
+    if (msg.fromMe) {
+      try {
+        // Obtener el contacto del destinatario cuando el mensaje es fromMe
+        actualContact = await wbot.getContactById(contactId);
+      } catch (error) {
+        console.log('⚠️ Could not get destination contact, using original contact');
+      }
+    }
+    
     return {
-      id: msg.from,
-      name: msg.fromMe ? rawNumber : (contact.pushname || contact.name || rawNumber)
+      id: contactId,
+      name: msg.fromMe ? (actualContact.pushname || actualContact.name || rawNumber) : (contact.pushname || contact.name || rawNumber)
     };
   }
 };
@@ -500,7 +523,16 @@ const verifyContact = async (
     whatsappId: wbot.id
   };
 
-  const contact = CreateOrUpdateContactService(contactData);
+  console.log('👤 DEBUGGING: Creating/updating contact with data:', contactData);
+
+  const contact = await CreateOrUpdateContactService(contactData);
+
+  console.log('👤 DEBUGGING: CreateOrUpdateContactService returned contact:', {
+    id: contact.id,
+    number: contact.number,
+    name: contact.name,
+    companyId: contact.companyId
+  });
 
   return contact;
 };
@@ -1738,7 +1770,25 @@ const handleMessage = async (
       return;
     }
 
+    console.log('🎫 About to call FindOrCreateTicketService with:', {
+      contactId: contact.id,
+      contactNumber: contact.number,
+      contactName: contact.name,
+      whatsappId: wbot.id,
+      unreadMessages,
+      companyId,
+      isGroup: !!groupContact
+    });
+
     const ticket = await FindOrCreateTicketService(contact, wbot.id!, unreadMessages, companyId, groupContact);
+    
+    console.log('🎫 FindOrCreateTicketService returned ticket:', {
+      ticketId: ticket.id,
+      ticketStatus: ticket.status,
+      ticketContactId: ticket.contactId,
+      ticketWhatsappId: ticket.whatsappId,
+      contactMatches: ticket.contactId === contact.id
+    });
 
     await provider(ticket, msg, companyId, contact, wbot as any);
 
@@ -2192,20 +2242,184 @@ const filterMessages = (msg: WhatsAppMessage): boolean => {
 };
 
 const wbotMessageListener = async (wbot: Session, companyId: number): Promise<void> => {
+  console.log(`🎧 Setting up message listeners for WhatsApp ${wbot.id}, company ${companyId}`);
+  
   try {
+    console.log(`📨 Registering 'message' event listener`);
     wbot.on('message', async (message: WhatsAppMessage) => {
-      if (!filterMessages(message)) return;
+      console.log('📨 message event received:', {
+        id: message.id._serialized,
+        fromMe: message.fromMe,
+        type: message.type,
+        body: message.body?.substring(0, 50),
+        from: message.from,
+        to: message.to,
+        hasQuotedMsg: !!message.hasQuotedMsg
+      });
+
+      if (!filterMessages(message)) {
+        console.log('❌ Message filtered out by filterMessages');
+        return;
+      }
+
+      console.log('✅ Message passed filter, checking if exists in DB');
 
       const messageExists = await Message.count({
         where: { id: message.id._serialized, companyId }
       });
 
+      console.log('📊 Message exists check:', {
+        messageId: message.id._serialized,
+        exists: messageExists > 0,
+        companyId
+      });
+
       if (!messageExists) {
+        console.log('💾 Processing new incoming message via message event');
         await handleMessage(message, wbot, companyId);
         await verifyRecentCampaign(message, companyId);
         await verifyCampaignMessageAndCloseTicket(message, companyId);
+        console.log('✅ Message processing completed via message event');
+      } else {
+        console.log('⚠️ Message already exists in database, skipping');
       }
     });
+
+    // Handler for all messages (try both message and message_create events)
+    wbot.on('message_create', async (message: WhatsAppMessage) => {
+      console.log('🔄 message_create event received:', message.fromMe ? 'OUTGOING' : 'INCOMING');
+      
+      if (!filterMessages(message)) {
+        console.log('❌ Message filtered out');
+        return;
+      }
+
+      console.log('✅ Processing message_create:', message.id._serialized, 'fromMe:', message.fromMe);
+
+      // Check if message already exists in database
+      const messageExists = await Message.count({
+        where: { id: message.id._serialized, companyId }
+      });
+
+      console.log('📊 Message exists in DB:', messageExists > 0);
+
+      if (!messageExists) {
+        if (message.fromMe) {
+          console.log('📱 Processing message sent from mobile phone (fromMe: true)');
+        } else {
+          console.log('💾 Processing INCOMING message from other phone (fromMe: false)');
+        }
+        
+        await handleMessage(message, wbot, companyId);
+        console.log('✅ Message processing completed via message_create event');
+      } else {
+        console.log('⚠️ Message already exists in database, skipping (likely sent via API)');
+      }
+    });
+
+    // Additional event listener for incoming messages specifically
+    wbot.on('message_received', async (message: WhatsAppMessage) => {
+      console.log('📥 message_received event received:', {
+        id: message.id._serialized,
+        fromMe: message.fromMe,
+        body: message.body?.substring(0, 50)
+      });
+      
+      if (!message.fromMe) {
+        console.log('📥 Processing incoming message via message_received');
+        const messageExists = await Message.count({
+          where: { id: message.id._serialized, companyId }
+        });
+
+        if (!messageExists) {
+          await handleMessage(message, wbot, companyId);
+          console.log('✅ Incoming message processed via message_received');
+        }
+      }
+    });
+
+    // Try listening to ALL events to debug what's available
+    console.log('🔍 Setting up debug event listeners for all WhatsApp events');
+    const originalEmit = wbot.emit.bind(wbot);
+    wbot.emit = function(event: string, ...args: any[]) {
+      // Log ALL events to see what's really happening
+      if (event.includes('message') || event.includes('chat') || event.includes('ready') || event.includes('auth') || event.includes('change') || event.includes('update')) {
+        console.log(`🎯 WhatsApp Event Detected: "${event}"`, args.length > 0 ? { hasArgs: true, firstArgType: typeof args[0] } : {});
+        
+        // Special handling for message events to see the message data
+        if (event.includes('message') && args[0] && args[0].fromMe !== undefined) {
+          console.log(`📝 Message Event Details:`, {
+            event: event,
+            fromMe: args[0].fromMe,
+            id: args[0].id?._serialized,
+            body: args[0].body?.substring(0, 50),
+            from: args[0].from,
+            to: args[0].to
+          });
+        }
+      }
+      return originalEmit(event, ...args);
+    };
+
+    // Additional fallback listeners for different event types
+    console.log('🔍 Setting up fallback event listeners');
+    
+    wbot.on('change_state', (state) => {
+      console.log('🔄 WhatsApp state changed:', state);
+    });
+
+    wbot.on('disconnected', (reason) => {
+      console.log('🔌 WhatsApp disconnected:', reason);
+    });
+
+    // Listen for ANY message-related event
+    ['message', 'message_create', 'message_received', 'message_edit', 'message_reaction'].forEach(eventType => {
+      wbot.on(eventType, (message) => {
+        console.log(`📨 ${eventType} event fired:`, {
+          fromMe: message.fromMe,
+          id: message.id?._serialized,
+          body: message.body?.substring(0, 30),
+          type: message.type
+        });
+      });
+    });
+
+    // Add periodic connection check and chat monitoring for WhatsApp Business
+    console.log('🔍 Setting up periodic connection monitoring for WhatsApp Business');
+    setInterval(async () => {
+      try {
+        const state = wbot.getState ? wbot.getState() : 'unknown';
+        const info = wbot.info;
+        console.log('📊 WhatsApp Business Connection Status:', {
+          whatsappId: wbot.id,
+          state: state,
+          hasInfo: !!info,
+          phoneNumber: info?.wid?.user,
+          platform: info?.platform,
+          pushname: info?.pushname,
+          isReady: info ? 'ready' : 'not ready',
+          isBusiness: info?.platform === 'smba'
+        });
+
+        // Check for unread chats in WhatsApp Business
+        try {
+          const chats = await wbot.getChats();
+          const unreadChats = chats.filter(chat => chat.unreadCount > 0);
+          if (unreadChats.length > 0) {
+            console.log('📬 Found unread chats in WhatsApp Business:', unreadChats.map(chat => ({
+              id: chat.id._serialized,
+              name: chat.name,
+              unreadCount: chat.unreadCount,
+              lastMessage: chat.lastMessage?.body?.substring(0, 30)
+            })));
+          }
+        } catch (chatError) {
+          console.log('⚠️ Could not fetch chats:', chatError.message);
+        }
+      } catch (error) {
+        console.error('❌ Error checking WhatsApp Business connection status:', error);
+      }
+    }, 30000); // Check every 30 seconds
 
     wbot.on('message_ack', async (message: WhatsAppMessage) => {
       await handleMsgAck(message, message.ack);
@@ -2217,7 +2431,10 @@ const wbotMessageListener = async (wbot: Session, companyId: number): Promise<vo
       }
     });
 
+    console.log(`✅ All message listeners registered successfully for WhatsApp ${wbot.id}`);
+    
   } catch (error) {
+    console.error(`❌ Error setting up message listeners for WhatsApp ${wbot.id}:`, error);
     Sentry.captureException(error);
     logger.error(`Error handling wbot message listener. Err: ${error}`);
   }

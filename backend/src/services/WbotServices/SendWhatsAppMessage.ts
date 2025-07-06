@@ -20,17 +20,28 @@ const SendWhatsAppMessage = async ({
   quotedMsg,
   isForwarded = false
 }: Request): Promise<WWebMessage> => {
+  console.log('📤 SendWhatsAppMessage started:', {
+    ticketId: ticket.id,
+    contactNumber: ticket.contact.number,
+    isGroup: ticket.isGroup,
+    bodyLength: body?.length,
+    hasQuotedMsg: !!quotedMsg
+  });
+
   const wbot = await GetTicketWbot(ticket);
 
   // Formatear número de contacto para whatsapp-web.js
   const chatId = `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "c.us"}`;
+  console.log('📤 Sending to chatId:', chatId);
 
   try {
     // Obtener el chat
     const chat = await wbot.getChatById(chatId);
+    console.log('📤 Chat obtained successfully');
     
     // Formatear el mensaje
     const formattedBody = formatBody(body, ticket.contact);
+    console.log('📤 Message formatted:', formattedBody.substring(0, 100));
     
     let sentMessage: WWebMessage;
 
@@ -77,6 +88,14 @@ const SendWhatsAppMessage = async ({
       // pero podemos agregar un indicador en el mensaje si es necesario
       console.log('Message sent as forwarded:', sentMessage.id._serialized);
     }
+
+    console.log('📤 Message sent successfully:', {
+      id: sentMessage.id._serialized,
+      type: sentMessage.type,
+      timestamp: sentMessage.timestamp,
+      fromMe: sentMessage.fromMe,
+      bodyPreview: sentMessage.body?.substring(0, 50)
+    });
 
     // Actualizar último mensaje del ticket
     await ticket.update({ lastMessage: formattedBody });

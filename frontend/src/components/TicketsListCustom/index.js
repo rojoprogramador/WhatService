@@ -197,6 +197,10 @@ const TicketsListCustom = (props) => {
   });
 
   useEffect(() => {
+    if (!queues || !Array.isArray(queues) || !tickets || !Array.isArray(tickets)) {
+      return;
+    }
+    
     const queueIds = queues.map((q) => q.id);
     const filteredTickets = tickets.filter(
       (t) => queueIds.indexOf(t.queueId) > -1

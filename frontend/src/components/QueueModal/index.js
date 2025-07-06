@@ -99,7 +99,7 @@ const QueueModal = ({ open, onClose, queueId }) => {
   const attachmentFile = useRef(null);
   const greetingRef = useRef();
   const [integrations, setIntegrations] = useState([]);
-  const [queueEditable, setQueueEditable] = useState(true);
+  const [queueEditable] = useState(true);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
 
   const [schedules, setSchedules] = useState([

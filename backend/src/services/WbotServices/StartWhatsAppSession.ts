@@ -20,11 +20,22 @@ export const StartWhatsAppSession = async (
 
 
   try {
+    console.log(`🚀 Starting WhatsApp session for company ${companyId}, whatsapp ${whatsapp.id}`);
     const wbot = await initWASocket(whatsapp);
 
+    console.log(`📱 WhatsApp client ready for ${whatsapp.name}, registering message listeners`);
+    console.log(`📊 Client state:`, {
+      id: wbot.id,
+      state: wbot.getState ? wbot.getState() : 'unknown',
+      isReady: wbot.info ? 'has info' : 'no info'
+    });
+
     wbotMessageListener(wbot, companyId);
+    console.log(`✅ Message listeners registered for WhatsApp ${whatsapp.id}`);
+    
     await wbotMonitor(wbot, whatsapp, companyId);
   } catch (err) {
+    console.error(`❌ Error starting WhatsApp session ${whatsapp.id}:`, err);
     Sentry.captureException(err);
     logger.error(err);
   }

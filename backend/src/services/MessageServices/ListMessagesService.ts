@@ -26,6 +26,8 @@ const ListMessagesService = async ({
   companyId,
   queues = []
 }: Request): Promise<Response> => {
+  console.log('📡 ListMessagesService called:', { ticketId, pageNumber, companyId });
+
   const ticket = await ShowTicketService(ticketId, companyId);
 
   if (!ticket) {
@@ -52,6 +54,14 @@ const ListMessagesService = async ({
     };
   }
 
+  console.log('🔍 Querying messages with options:', { 
+    ticketId, 
+    companyId, 
+    limit, 
+    offset,
+    hasQueueFilter: queues.length > 0 
+  });
+
   const { count, rows: messages } = await Message.findAndCountAll({
     ...options,
     limit,
@@ -72,6 +82,15 @@ const ListMessagesService = async ({
   });
 
   const hasMore = count > offset + messages.length;
+  
+  console.log('📊 Messages query result:', {
+    ticketId,
+    totalCount: count,
+    messagesReturned: messages.length,
+    hasMore,
+    pageNumber,
+    offset
+  });
 
   return {
     messages: messages.reverse(),

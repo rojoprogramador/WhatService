@@ -159,7 +159,12 @@ export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
         webVersionCache: {
           type: 'remote',
           remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
-        }
+        },
+        // Force receive all message events
+        takeoverOnConflict: true,
+        takeoverTimeoutMs: 0,
+        // Additional options to ensure message reception
+        restartOnAuthFail: true
       }) as Session;
 
       // Asignar propiedades personalizadas
@@ -212,9 +217,41 @@ export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
       // Event: Cliente listo/conectado
       client.on('ready', async () => {
         logger.info(`WhatsApp session ${name} is ready!`);
+        console.log(`📱 WhatsApp session ${name} is fully ready and connected!`);
 
         const info = client.info;
         const phoneNumber = info?.wid?.user || "";
+
+        console.log('📊 WhatsApp Session Info:', {
+          name: name,
+          phoneNumber: phoneNumber,
+          platform: info?.platform,
+          pushname: info?.pushname,
+          hasWid: !!info?.wid,
+          isBusiness: info?.platform === 'smba'
+        });
+
+        // Special handling for WhatsApp Business
+        if (info?.platform === 'smba') {
+          console.log('🏢 WhatsApp Business detected - setting up business-specific configurations');
+          
+          // Check for existing chats and unread messages
+          try {
+            const chats = await client.getChats();
+            console.log(`📬 Found ${chats.length} chats in WhatsApp Business`);
+            
+            const unreadChats = chats.filter(chat => chat.unreadCount > 0);
+            if (unreadChats.length > 0) {
+              console.log('📬 Unread chats found:', unreadChats.map(chat => ({
+                id: chat.id._serialized,
+                name: chat.name,
+                unreadCount: chat.unreadCount
+              })));
+            }
+          } catch (error) {
+            console.log('⚠️ Could not fetch WhatsApp Business chats:', error);
+          }
+        }
 
         await whatsappUpdate.update({
           status: "CONNECTED",

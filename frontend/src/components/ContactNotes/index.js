@@ -53,13 +53,17 @@ export function ContactNotes ({ ticket }) {
     const { saveNote, deleteNote, listNotes } = useTicketNotes()
 
     useEffect(() => {
+        if (!ticketId || !contactId) {
+            return;
+        }
+        
         async function openAndFetchData () {
             handleResetState()
             await loadNotes()
         }
         openAndFetchData()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [ticketId, contactId])
 
     const handleResetState = () => {
         setNewNote({ note: "" })

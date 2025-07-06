@@ -93,24 +93,31 @@ const NotificationsPopOver = (volume) => {
 
 	useEffect(() => {
 		const processNotifications = () => {
+			if (!tickets || !Array.isArray(tickets)) {
+				setNotifications([]);
+				return;
+			}
+			
 			if (showPendingTickets) {
 				setNotifications(tickets);
 			} else {
 				const newNotifications = tickets.filter(ticket => ticket.status !== "pending");
-
 				setNotifications(newNotifications);
 			}
 		}
 
 		processNotifications();
-	}, [tickets]);
+	}, [tickets, showPendingTickets]);
 
 	useEffect(() => {
 		ticketIdRef.current = ticketIdUrl;
 	}, [ticketIdUrl]);
 
 	useEffect(() => {
+		if (!user?.companyId || !socketManager) return;
+		
     const socket = socketManager.getSocket(user.companyId);
+		if (!socket) return;
 
 		socket.on("ready", () => socket.emit("joinNotification"));
 

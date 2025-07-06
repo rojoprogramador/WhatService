@@ -910,8 +910,11 @@ const messages = {
         },
       },
       settings: {
-        success: "Configurações salvas com sucesso.",
+        success: "Operação atualizada com sucesso.",
         title: "Configurações",
+        enabled: "Habilitado",
+        disabled: "Desabilitado",
+        globalSettings: "Configurações Globais",
         settings: {
           userCreation: {
             name: "Criação de usuário",
