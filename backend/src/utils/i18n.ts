@@ -110,6 +110,133 @@ export const messages: TranslationMessages = {
     es: "📎 Archivo adjunto",
     en: "📎 File attachment",
     pt: "📎 Arquivo anexo"
+  },
+
+  // Mensajes de error del backend para las APIs
+  ERR_NO_OTHER_WHATSAPP: {
+    es: "Debe haber al menos un WhatsApp predeterminado.",
+    en: "There must be at least one default WhatsApp.",
+    pt: "Deve haver pelo menos um WhatsApp padrão."
+  },
+  ERR_NO_DEF_WAPP_FOUND: {
+    es: "No se encontró WhatsApp predeterminado. Verifique la página de conexiones.",
+    en: "No default WhatsApp found. Please check the connections page.",
+    pt: "Nenhum WhatsApp padrão encontrado. Verifique a página de conexões."
+  },
+  ERR_WAPP_NOT_INITIALIZED: {
+    es: "Esta sesión de WhatsApp no ha sido inicializada. Verifique la página de conexiones.",
+    en: "This WhatsApp session has not been initialized. Please check the connections page.",
+    pt: "Esta sessão do WhatsApp não foi inicializada. Verifique a página de conexões."
+  },
+  ERR_WAPP_CHECK_CONTACT: {
+    es: "No se pudo verificar el contacto de WhatsApp. Verifique la página de conexiones.",
+    en: "Could not check WhatsApp contact. Please check the connections page.",
+    pt: "Não foi possível verificar o contato do WhatsApp. Verifique a página de conexões"
+  },
+  ERR_WAPP_INVALID_CONTACT: {
+    es: "Este no es un número de WhatsApp válido.",
+    en: "This is not a valid WhatsApp number.",
+    pt: "Este não é um número de Whatsapp válido."
+  },
+  ERR_WAPP_DOWNLOAD_MEDIA: {
+    es: "No se pudo descargar el contenido multimedia de WhatsApp. Verifique la página de conexiones.",
+    en: "Could not download media from WhatsApp. Please check the connections page.",
+    pt: "Não foi possível baixar mídia do WhatsApp. Verifique a página de conexões."
+  },
+  ERR_INVALID_CREDENTIALS: {
+    es: "Error de autenticación. Por favor, inténtelo de nuevo.",
+    en: "Authentication error. Please try again.",
+    pt: "Erro de autenticação. Por favor, tente novamente."
+  },
+  ERR_SENDING_WAPP_MSG: {
+    es: "Error al enviar mensaje de WhatsApp. Verifique la página de conexiones.",
+    en: "Error sending WhatsApp message. Please check the connections page.",
+    pt: "Erro ao enviar mensagem do WhatsApp. Verifique a página de conexões."
+  },
+  ERR_DELETE_WAPP_MSG: {
+    es: "No se pudo eliminar el mensaje de WhatsApp.",
+    en: "Could not delete WhatsApp message.",
+    pt: "Não foi possível excluir a mensagem do WhatsApp."
+  },
+  ERR_OTHER_OPEN_TICKET: {
+    es: "Ya existe un ticket abierto para este contacto.",
+    en: "There is already an open ticket for this contact.",
+    pt: "Já existe um tíquete aberto para este contato."
+  },
+  ERR_SESSION_EXPIRED: {
+    es: "Sesión expirada. Por favor, inicie sesión.",
+    en: "Session expired. Please log in.",
+    pt: "Sessão expirada. Por favor entre."
+  },
+  ERR_USER_CREATION_DISABLED: {
+    es: "La creación de usuarios ha sido deshabilitada por el administrador.",
+    en: "User creation has been disabled by the administrator.",
+    pt: "A criação do usuário foi desabilitada pelo administrador."
+  },
+  ERR_NO_PERMISSION: {
+    es: "No tienes permiso para acceder a este recurso.",
+    en: "You do not have permission to access this resource.",
+    pt: "Você não tem permissão para acessar este recurso."
+  },
+  ERR_DUPLICATED_CONTACT: {
+    es: "Ya existe un contacto con este número.",
+    en: "A contact with this number already exists.",
+    pt: "Já existe um contato com este número."
+  },
+  ERR_NO_SETTING_FOUND: {
+    es: "No se encontró configuración con este ID.",
+    en: "No setting found with this ID.",
+    pt: "Nenhuma configuração encontrada com este ID."
+  },
+  ERR_NO_CONTACT_FOUND: {
+    es: "No se encontró contacto con este ID.",
+    en: "No contact found with this ID.",
+    pt: "Nenhum contato encontrado com este ID."
+  },
+  ERR_NO_TICKET_FOUND: {
+    es: "No se encontró ticket con este ID.",
+    en: "No ticket found with this ID.",
+    pt: "Nenhum tíquete encontrado com este ID."
+  },
+  ERR_NO_USER_FOUND: {
+    es: "No se encontró usuario con este ID.",
+    en: "No user found with this ID.",
+    pt: "Nenhum usuário encontrado com este ID."
+  },
+  ERR_NO_WAPP_FOUND: {
+    es: "No se encontró WhatsApp con este ID.",
+    en: "No WhatsApp found with this ID.",
+    pt: "Nenhum WhatsApp encontrado com este ID."
+  },
+  ERR_CREATING_MESSAGE: {
+    es: "Error al crear mensaje en la base de datos.",
+    en: "Error creating message in the database.",
+    pt: "Erro ao criar mensagem no banco de dados."
+  },
+  ERR_CREATING_TICKET: {
+    es: "Error al crear ticket en la base de datos.",
+    en: "Error creating ticket in the database.",
+    pt: "Erro ao criar tíquete no banco de dados."
+  },
+  ERR_FETCH_WAPP_MSG: {
+    es: "Error al obtener el mensaje de WhatsApp, puede que sea muy antiguo.",
+    en: "Error fetching message from WhatsApp, it might be too old.",
+    pt: "Erro ao buscar a mensagem no WhtasApp, talvez ela seja muito antiga."
+  },
+  ERR_QUEUE_COLOR_ALREADY_EXISTS: {
+    es: "Este color ya está en uso, elija otro.",
+    en: "This color is already in use, please choose another.",
+    pt: "Esta cor já está em uso, escolha outra."
+  },
+  ERR_WAPP_GREETING_REQUIRED: {
+    es: "El mensaje de saludo es obligatorio cuando hay más de una cola.",
+    en: "The greeting message is required when there is more than one queue.",
+    pt: "A mensagem de saudação é obrigatório quando há mais de uma fila."
+  },
+  ERR_UNKNOWN_ERROR: {
+    es: "¡Ha ocurrido un error desconocido!",
+    en: "An unknown error has occurred!",
+    pt: "Ocorreu um erro desconhecido!"
   }
 };
 

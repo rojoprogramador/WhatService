@@ -25,6 +25,7 @@ import MainListItems from "./MainListItems";
 import NotificationsPopOver from "../components/NotificationsPopOver";
 import NotificationsVolume from "../components/NotificationsVolume";
 import UserModal from "../components/UserModal";
+import UserLanguageSelector from "../components/UserLanguageSelector";
 import { AuthContext } from "../context/Auth/AuthContext";
 import BackdropLoading from "../components/BackdropLoading";
 import DarkMode from "../components/DarkMode";
@@ -426,6 +427,8 @@ const LoggedInLayout = ({ children, themeToggle }) => {
           <AnnouncementsPopover />
 
           <ChatPopover />
+
+          <UserLanguageSelector />
 
           <div>
             <IconButton

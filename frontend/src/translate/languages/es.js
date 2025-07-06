@@ -1032,6 +1032,14 @@ const messages = {
           "Este color ya está en uso, elige otro.",
         ERR_WAPP_GREETING_REQUIRED:
           "El mensaje de saludo es obligatorio cuando hay más de una cola.",
+        ERR_UNKNOWN_ERROR: "¡Ha ocurrido un error desconocido!",
+      },
+      languages: {
+        "pt": "Português",
+        "pt-BR": "Português (Brasil)",
+        "en": "English",
+        "es": "Español",
+        "tr": "Türkçe",
       },
     },
   },

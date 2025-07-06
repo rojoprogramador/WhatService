@@ -43,7 +43,7 @@ const UserLanguageSelector = () => {
             >
                 {user.language
                     ? i18n.t(`languages.${user.language}`)
-                    : i18n.t(`languages.${user.undefined}`)}
+                    : i18n.t(`languages.es`)}
             </Button>
             <Menu
                 anchorEl={langueMenuAnchorEl}
@@ -51,17 +51,14 @@ const UserLanguageSelector = () => {
                 open={Boolean(langueMenuAnchorEl)}
                 onClose={handleCloseLanguageMenu}
             >
-                <MenuItem onClick={() => handleChangeLanguage("pt-BR")}>
-                    {i18n.t("languages.pt-BR")}
+                <MenuItem onClick={() => handleChangeLanguage("es")}>
+                    {i18n.t("languages.es")}
                 </MenuItem>
                 <MenuItem onClick={() => handleChangeLanguage("en")}>
                     {i18n.t("languages.en")}
                 </MenuItem>
-                <MenuItem onClick={() => handleChangeLanguage("es")}>
-                    {i18n.t("languages.es")}
-                </MenuItem>
-                <MenuItem onClick={() => handleChangeLanguage("tr")}>
-                    {i18n.t("languages.tr")}
+                <MenuItem onClick={() => handleChangeLanguage("pt")}>
+                    {i18n.t("languages.pt")}
                 </MenuItem>
             </Menu>
         </>

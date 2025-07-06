@@ -487,6 +487,9 @@ const messages = {
           prompts: "Open.Ai",
           reports: "Reports",
           queueIntegration: "Integrations",
+          rates: "Rates",
+          listing: "Listing",
+          contactList: "Contact List",
         },
         appBar: {
           notRegister: "No notifications",
@@ -1028,6 +1031,14 @@ const messages = {
           "This color is already in use, please choose another.",
         ERR_WAPP_GREETING_REQUIRED:
           "The greeting message is required when there is more than one queue.",
+        ERR_UNKNOWN_ERROR: "An unknown error has occurred!",
+      },
+      languages: {
+        "pt": "Português",
+        "pt-BR": "Português (Brasil)",
+        "en": "English",
+        "es": "Español",
+        "tr": "Türkçe",
       },
     },
   },

@@ -1043,6 +1043,14 @@ const messages = {
           "Esta cor já está em uso, escolha outra.",
         ERR_WAPP_GREETING_REQUIRED:
           "A mensagem de saudação é obrigatório quando há mais de uma fila.",
+        ERR_UNKNOWN_ERROR: "Ocorreu um erro desconhecido!",
+      },
+      languages: {
+        "pt": "Português",
+        "pt-BR": "Português (Brasil)",
+        "en": "English",
+        "es": "Español",
+        "tr": "Türkçe",
       },
     },
   },
