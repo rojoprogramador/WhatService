@@ -67,6 +67,34 @@ const messages = {
             title: "Servicios hoy: ",
           },
         },
+        filters: {
+          parameterizeFilter: "Parametrice el filtro",
+          initialDate: "Fecha Inicial",
+          finalDate: "Fecha Final",
+          period: "Período",
+          filterType: "Tipo de Filtro",
+          dateFilter: "Filtro por Fecha",
+          periodFilter: "Filtro por Período",
+          selectPeriod: "Seleccione el período deseado",
+          noneSelected: "Ninguno seleccionado",
+          last3Days: "Últimos 3 días",
+          last7Days: "Últimos 7 días",
+          last15Days: "Últimos 15 días",
+          last30Days: "Últimos 30 días",
+          last60Days: "Últimos 60 días",
+          last90Days: "Últimos 90 días",
+          filter: "Filtrar"
+        },
+        cards: {
+          activeConnections: "Conexiones Activas",
+          companies: "Empresas",
+          inConversation: "En Conversación",
+          waiting: "Aguardando",
+          finished: "Finalizados",
+          newContacts: "Nuevos Contactos",
+          avgConversationTime: "T.M. de Conversación",
+          avgWaitTime: "T.M. de Espera"
+        }
       },
       connections: {
         title: "Conexiones",

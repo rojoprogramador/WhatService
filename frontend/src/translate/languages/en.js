@@ -67,6 +67,34 @@ const messages = {
             title: "Attendances today: ",
           },
         },
+        filters: {
+          parameterizeFilter: "Set the filter parameters",
+          initialDate: "Start Date",
+          finalDate: "End Date",
+          period: "Period",
+          filterType: "Filter Type",
+          dateFilter: "Date Filter",
+          periodFilter: "Period Filter",
+          selectPeriod: "Select the desired period",
+          noneSelected: "None selected",
+          last3Days: "Last 3 days",
+          last7Days: "Last 7 days",
+          last15Days: "Last 15 days",
+          last30Days: "Last 30 days",
+          last60Days: "Last 60 days",
+          last90Days: "Last 90 days",
+          filter: "Filter"
+        },
+        cards: {
+          activeConnections: "Active Connections",
+          companies: "Companies",
+          inConversation: "In Conversation",
+          waiting: "Waiting",
+          finished: "Finished",
+          newContacts: "New Contacts",
+          avgConversationTime: "Avg. Conversation Time",
+          avgWaitTime: "Avg. Wait Time"
+        }
       },
       connections: {
         title: "Connections",
