@@ -51,6 +51,7 @@ const NewTicketModal = ({ modalOpen, onClose, initialContact }) => {
   const [selectedWhatsapp, setSelectedWhatsapp] = useState("");
   const [newContact, setNewContact] = useState({});
   const [whatsapps, setWhatsapps] = useState([]);
+  const [queues, setQueues] = useState([]);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const { user } = useContext(AuthContext);
   const { companyId, whatsappId } = user;
@@ -75,14 +76,23 @@ const NewTicketModal = ({ modalOpen, onClose, initialContact }) => {
           .then(({ data }) => setWhatsapps(data));
       };
 
+      const fetchQueues = async () => {
+        try {
+          const { data } = await api.get("/queue");
+          console.log("Colas cargadas:", data);
+          setQueues(data);
+        } catch (err) {
+          console.error("Error cargando colas:", err);
+          toastError(err);
+        }
+      };
+
       if (whatsappId !== null && whatsappId!== undefined) {
         setSelectedWhatsapp(whatsappId)
       }
 
-      if (user?.queues && user.queues.length === 1) {
-        setSelectedQueue(user.queues[0].id)
-      }
       fetchContacts();
+      fetchQueues();
       setLoading(false);
     }, 500);
     return () => clearTimeout(delayDebounceFn);
@@ -144,8 +154,8 @@ const NewTicketModal = ({ modalOpen, onClose, initialContact }) => {
 
   const handleSaveTicket = async contactId => {
     if (!contactId) return;
-    if (selectedQueue === "" && user.profile !== 'admin') {
-      toast.error("Selecione uma fila");
+    if (selectedQueue === "") {
+      toast.error("Por favor selecciona una cola");
       return;
     }
     
@@ -296,73 +306,73 @@ const NewTicketModal = ({ modalOpen, onClose, initialContact }) => {
             {renderContactAutocomplete()}
             {/* FILA */}
             <Grid xs={12} item>
-              <Select
+              <TextField
+                select
                 required
                 fullWidth
-                displayEmpty
                 variant="outlined"
+                label={i18n.t("ticketsQueueSelect.placeholder")}
                 value={selectedQueue}
                 onChange={(e) => {
                   setSelectedQueue(e.target.value)
                 }}
-                MenuProps={{
-                  anchorOrigin: {
-                    vertical: "bottom",
-                    horizontal: "left",
+                SelectProps={{
+                  displayEmpty: true,
+                  MenuProps: {
+                    anchorOrigin: {
+                      vertical: "bottom",
+                      horizontal: "left",
+                    },
+                    transformOrigin: {
+                      vertical: "top",
+                      horizontal: "left",
+                    },
+                    getContentAnchorEl: null,
                   },
-                  transformOrigin: {
-                    vertical: "top",
-                    horizontal: "left",
-                  },
-                  getContentAnchorEl: null,
-                }}
-                renderValue={() => {
-                  if (selectedQueue === "") {
-                    return "Selecione uma fila"
-                  }
-                  const queue = user.queues.find(q => q.id === selectedQueue)
-                  return queue.name
                 }}
               >
-                {user.queues?.length > 0 &&
-                  user.queues.map((queue, key) => (
+                <MenuItem value="">
+                  <em>{i18n.t("ticketsQueueSelect.placeholder")}</em>
+                </MenuItem>
+                {queues?.length > 0 &&
+                  queues.map((queue, key) => (
                     <MenuItem dense key={key} value={queue.id}>
                       <ListItemText primary={queue.name} />
                     </MenuItem>
                   ))
                 }
-              </Select>
+              </TextField>
             </Grid>
             {/* CONEXAO */}
             <Grid xs={12} item>
-              <Select
+              <TextField
+                select
                 required
                 fullWidth
-                displayEmpty
                 variant="outlined"
+                label={i18n.t("connections.title")}
                 value={selectedWhatsapp}
                 onChange={(e) => {
                   setSelectedWhatsapp(e.target.value)
                 }}
-                MenuProps={{
-                  anchorOrigin: {
-                    vertical: "bottom",
-                    horizontal: "left",
+                SelectProps={{
+                  displayEmpty: true,
+                  MenuProps: {
+                    anchorOrigin: {
+                      vertical: "bottom",
+                      horizontal: "left",
+                    },
+                    transformOrigin: {
+                      vertical: "top",
+                      horizontal: "left",
+                    },
+                    getContentAnchorEl: null,
                   },
-                  transformOrigin: {
-                    vertical: "top",
-                    horizontal: "left",
-                  },
-                  getContentAnchorEl: null,
-                }}
-                renderValue={() => {
-                  if (selectedWhatsapp === "") {
-                    return "Selecione uma Conexão"
-                  }
-                  const whatsapp = whatsapps.find(w => w.id === selectedWhatsapp)
-                  return whatsapp.name
                 }}
               >
+                <MenuItem value="">
+                  <em>{i18n.t("connections.title")}</em>
+                </MenuItem>
                 {whatsapps?.length > 0 &&
                   whatsapps.map((whatsapp, key) => (
                     <MenuItem dense key={key} value={whatsapp.id}>
@@ -378,7 +388,7 @@ const NewTicketModal = ({ modalOpen, onClose, initialContact }) => {
                       />
                     </MenuItem>
                   ))}
-              </Select>
+              </TextField>
             </Grid>
           </Grid>
         </DialogContent>
