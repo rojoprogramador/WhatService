@@ -132,7 +132,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
       card00: {
@@ -141,7 +141,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card1: {
@@ -150,7 +150,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card2: {
@@ -159,7 +159,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card3: {
@@ -168,7 +168,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card4: {
@@ -177,7 +177,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card5: {
@@ -186,7 +186,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card6: {
@@ -195,7 +195,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card7: {
@@ -204,7 +204,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card8: {
@@ -213,7 +213,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card9: {
@@ -222,7 +222,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   fixedHeightPaper2: {
@@ -525,7 +525,6 @@ const Dashboard = () => {
           </Grid>
 		  )}
 
-          {/* EM ATENDIMENTO */}
           <Grid item xs={12} sm={6} md={4}>
             <Paper
               className={classes.card1}
@@ -641,7 +640,6 @@ const Dashboard = () => {
             </Paper>
 </Grid>*/}
 
-          {/* FINALIZADOS */}
           <Grid item xs={12} sm={6} md={4}>
             <Paper
               className={classes.card3}

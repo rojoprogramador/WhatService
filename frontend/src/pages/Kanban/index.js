@@ -84,11 +84,11 @@ const Kanban = () => {
     const lanes = [
       {
         id: "lane0",
-        title: i18n.t("Em aberto"),
+        title: i18n.t("kanban.open"),
         label: "0",
         cards: filteredTickets.map(ticket => ({
           id: ticket.id.toString(),
-          label: "Ticket nº " + ticket.id.toString(),
+          label: i18n.t("kanban.ticketNumber") + ticket.id.toString(),
           description: (
               <div>
                 <p>
@@ -101,7 +101,7 @@ const Kanban = () => {
                   onClick={() => {
                     handleCardClick(ticket.uuid)
                   }}>
-                    Ver Ticket
+                    {i18n.t("kanban.viewTicket")}
                 </button>
               </div>
             ),
@@ -122,7 +122,7 @@ const Kanban = () => {
           label: tag.id.toString(),
           cards: filteredTickets.map(ticket => ({
             id: ticket.id.toString(),
-            label: "Ticket nº " + ticket.id.toString(),
+            label: i18n.t("kanban.ticketNumber") + ticket.id.toString(),
             description: (
               <div>
                 <p>
@@ -136,7 +136,7 @@ const Kanban = () => {
                     
                     handleCardClick(ticket.uuid)
                   }}>
-                    Ver Ticket
+                    {i18n.t("kanban.viewTicket")}
                 </button>
               </div>
             ),

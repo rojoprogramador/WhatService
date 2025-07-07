@@ -26,10 +26,25 @@ import toastError from "../../errors/toastError";
 const useStyles = makeStyles((theme) => ({
   ticket: {
     position: "relative",
+    borderRadius: "12px",
+    margin: "4px 8px",
+    transition: "all 0.3s ease",
+    backgroundColor: theme.palette.mode === "light" ? "#fff" : theme.palette.background.paper,
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: theme.palette.mode === "light" 
+        ? "0 4px 16px rgba(26, 188, 156, 0.15)" 
+        : "0 4px 16px rgba(0, 123, 255, 0.15)",
+    },
   },
 
   pendingTicket: {
     cursor: "unset",
+    backgroundColor: theme.palette.mode === "light" 
+      ? "rgba(26, 188, 156, 0.05)" 
+      : "rgba(0, 123, 255, 0.05)",
+    borderLeft: `4px solid ${theme.palette.mode === "light" ? "#1abc9c" : "#007bff"}`,
   },
 
   noTicketsDiv: {
@@ -43,7 +58,7 @@ const useStyles = makeStyles((theme) => ({
 
   noTicketsText: {
     textAlign: "center",
-    color: "rgb(104, 121, 146)",
+    color: theme.palette.mode === "light" ? "rgb(104, 121, 146)" : "#bbb",
     fontSize: "14px",
     lineHeight: "1.4",
   },
@@ -53,26 +68,35 @@ const useStyles = makeStyles((theme) => ({
     fontSize: "16px",
     fontWeight: "600",
     margin: "0px",
+    color: theme.palette.mode === "light" ? "#1abc9c" : "#007bff",
   },
 
   contactNameWrapper: {
     display: "flex",
     justifyContent: "space-between",
+    alignItems: "center",
   },
 
   lastMessageTime: {
     justifySelf: "flex-end",
+    color: theme.palette.mode === "light" ? "#666" : "#999",
+    fontSize: "0.75rem",
   },
 
   closedBadge: {
     alignSelf: "center",
     justifySelf: "flex-end",
-    marginRight: 32,
+    marginRight: 16,
     marginLeft: "auto",
+    backgroundColor: "#e74c3c",
+    color: "white",
+    fontWeight: "bold",
+    borderRadius: "12px",
   },
 
   contactLastMessage: {
     paddingRight: 20,
+    color: theme.palette.mode === "light" ? "#555" : "#ddd",
   },
 
   newMessagesCount: {
@@ -83,21 +107,32 @@ const useStyles = makeStyles((theme) => ({
 
   badgeStyle: {
     color: "white",
-    backgroundColor: green[500],
+    backgroundColor: theme.palette.mode === "light" ? "#1abc9c" : "#007bff",
+    fontWeight: "bold",
+    borderRadius: "10px",
   },
 
   acceptButton: {
     position: "absolute",
     left: "50%",
+    background: `linear-gradient(135deg, ${theme.palette.mode === "light" ? "#1abc9c" : "#007bff"} 0%, ${theme.palette.mode === "light" ? "#16a085" : "#0056b3"} 100%)`,
+    color: "white",
+    borderRadius: "20px",
+    fontWeight: "bold",
+    "&:hover": {
+      background: `linear-gradient(135deg, ${theme.palette.mode === "light" ? "#16a085" : "#0056b3"} 0%, ${theme.palette.mode === "light" ? "#1abc9c" : "#007bff"} 100%)`,
+      transform: "scale(1.05)",
+    },
   },
 
   ticketQueueColor: {
     flex: "none",
-    width: "8px",
-    height: "100%",
+    width: "6px",
+    height: "calc(100% - 8px)",
     position: "absolute",
-    top: "0%",
-    left: "0%",
+    top: "4px",
+    left: "4px",
+    borderRadius: "3px",
   },
 }));
 

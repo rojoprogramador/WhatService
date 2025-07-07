@@ -60,7 +60,7 @@ const useStyles = makeStyles((theme) => ({
   },
 
   circleLoading: {
-    color: green[500],
+    color: theme.palette.mode === "light" ? "#1abc9c" : "#007bff",
     position: "absolute",
     opacity: "70%",
     top: 0,
@@ -265,7 +265,7 @@ const useStyles = makeStyles((theme) => ({
   },
 
   ackDoneAllIcon: {
-    color: green[500],
+    color: theme.palette.mode === "light" ? "#1abc9c" : "#007bff",
     fontSize: 18,
     verticalAlign: "middle",
     marginLeft: 4,

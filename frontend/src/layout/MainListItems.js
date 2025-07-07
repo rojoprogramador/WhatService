@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useReducer, useState } from "react";
-import { Link as RouterLink, useHistory } from "react-router-dom";
+import { Link as RouterLink, useHistory, useLocation } from "react-router-dom";
 
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
@@ -52,17 +52,61 @@ const useStyles = makeStyles((theme) => ({
     marginTop: "-15px",
     marginBottom: "-10px",
   },
-    logoutButton: {
+  logoutButton: {
     borderRadius: 10,
     marginTop: 10,
     backgroundColor: theme.palette.sair.main,
     color: theme.palette.text.sair,
-	},
+  },
+  menuItem: {
+    borderRadius: '12px',
+    margin: '2px 8px',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      backgroundColor: theme.mode === 'light' 
+        ? 'rgba(26, 188, 156, 0.08)' 
+        : 'rgba(0, 123, 255, 0.08)',
+      transform: 'translateX(2px)',
+    },
+  },
+  activeMenuItem: {
+    background: theme.mode === 'light' 
+      ? 'linear-gradient(135deg, #1abc9c 0%, #16a085 100%)' 
+      : 'linear-gradient(135deg, #007bff 0%, #1abc9c 100%)',
+    color: theme.palette.common.white,
+    borderRadius: '12px',
+    margin: '4px 8px',
+    boxShadow: theme.mode === 'light' 
+      ? '0 3px 8px rgba(26, 188, 156, 0.3)' 
+      : '0 3px 8px rgba(0, 123, 255, 0.3)',
+    transform: 'translateX(4px)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      background: theme.mode === 'light' 
+        ? 'linear-gradient(135deg, #16a085 0%, #1abc9c 100%)' 
+        : 'linear-gradient(135deg, #0056b3 0%, #007bff 100%)',
+      transform: 'translateX(6px)',
+      boxShadow: theme.mode === 'light' 
+        ? '0 4px 12px rgba(26, 188, 156, 0.4)' 
+        : '0 4px 12px rgba(0, 123, 255, 0.4)',
+    },
+    '& .MuiListItemIcon-root': {
+      color: theme.palette.common.white,
+      minWidth: '40px',
+    },
+    '& .MuiListItemText-primary': {
+      color: theme.palette.common.white,
+      fontWeight: 'bold',
+      fontSize: '0.95rem',
+    },
+  },
 }));
 
 
 function ListItemLink(props) {
   const { icon, primary, to, className } = props;
+  const location = useLocation();
+  const classes = useStyles();
 
   const renderLink = React.useMemo(
     () =>
@@ -72,9 +116,16 @@ function ListItemLink(props) {
     [to]
   );
 
+  const isActive = location.pathname === to;
+
   return (
     <li>
-      <ListItem button dense component={renderLink} className={className}>
+      <ListItem 
+        button 
+        dense 
+        component={renderLink} 
+        className={`${className || ''} ${isActive ? classes.activeMenuItem : classes.menuItem}`}
+      >
         {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
         <ListItemText primary={primary} />
       </ListItem>

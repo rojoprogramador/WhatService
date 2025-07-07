@@ -55,11 +55,11 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.fancyBackground,
     '& .MuiButton-outlinedPrimary': {
       color: theme.mode === 'light' ? '#FFF' : '#FFF',
-	  backgroundColor: theme.mode === 'light' ? '#2f0549' : '#1c1c1c',
+	  backgroundColor: theme.mode === 'light' ? '#1abc9c' : '#1c1c1c',
       //border: theme.mode === 'light' ? '1px solid rgba(0 124 102)' : '1px solid rgba(255, 255, 255, 0.5)',
     },
     '& .MuiTab-textColorPrimary.Mui-selected': {
-      color: theme.mode === 'light' ? '#2f0549' : '#FFF',
+      color: theme.mode === 'light' ? '#1abc9c' : '#FFF',
     }
   },
   avatar: {
@@ -395,13 +395,18 @@ const LoggedInLayout = ({ children, themeToggle }) => {
           >
             {/* {greaterThenSm && user?.profile === "admin" && getDateAndDifDays(user?.company?.dueDate).difData < 7 ? ( */}
             {greaterThenSm && user?.profile === "admin" && user?.company?.dueDate ? (
-              <>
-                Hola! <b>{user.name}</b>, Bienvenido a <b>{user?.company?.name}</b>! (licencia hasta: {dateToClient(user?.company?.dueDate)})
-              </>
+              <span dangerouslySetInnerHTML={{
+                __html: i18n.t("mainDrawer.appBar.welcomeWithLicense")
+                  .replace("{name}", `<b>${user.name}</b>`)
+                  .replace("{company}", `<b>${user?.company?.name}</b>`)
+                  .replace("{date}", dateToClient(user?.company?.dueDate))
+              }} />
             ) : (
-              <>
-                Hola!  <b>{user.name}</b>, Bienvenido a <b>{user?.company?.name}</b>!
-              </>
+              <span dangerouslySetInnerHTML={{
+                __html: i18n.t("mainDrawer.appBar.welcome")
+                  .replace("{name}", `<b>${user.name}</b>`)
+                  .replace("{company}", `<b>${user?.company?.name}</b>`)
+              }} />
             )}
           </Typography>
 

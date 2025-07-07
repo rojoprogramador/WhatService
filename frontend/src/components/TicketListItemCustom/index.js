@@ -12,7 +12,7 @@ import ListItemAvatar from "@material-ui/core/ListItemAvatar";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import ListItemText from "@material-ui/core/ListItemText";
 import Typography from "@material-ui/core/Typography";
-import { blue, green, grey } from "@material-ui/core/colors";
+import { blue, grey } from "@material-ui/core/colors";
 import { makeStyles } from "@material-ui/core/styles";
 import FaceIcon from "@material-ui/icons/Face";
 import { i18n } from "../../translate/i18n";
@@ -37,6 +37,20 @@ import { generateColor } from "../../helpers/colorGenerator";
 const useStyles = makeStyles((theme) => ({
   ticket: {
     position: "relative",
+    padding: "8px 12px",
+    margin: "2px 0",
+    minHeight: "140px",
+    overflow: "visible",
+    [theme.breakpoints.down('sm')]: {
+      padding: "6px 8px",
+      margin: "1px 0",
+      minHeight: "120px",
+    },
+    [theme.breakpoints.down('xs')]: {
+      padding: "4px 6px",
+      margin: "0px",
+      minHeight: "110px",
+    },
   },
 
   pendingTicket: {
@@ -45,14 +59,14 @@ const useStyles = makeStyles((theme) => ({
   queueTag: {
     background: "#FCFCFC",
     color: "#000",
-    marginRight: 1,
-    padding: 1,
+    marginRight: 2,
+    marginBottom: 2,
+    padding: "1px 4px",
     fontWeight: 'bold',
-    paddingLeft: 5,
-    paddingRight: 5,
     borderRadius: 3,
-    fontSize: "0.8em",
-    whiteSpace: "nowrap"
+    fontSize: "0.7em",
+    whiteSpace: "nowrap",
+    border: "1px solid #e0e0e0",
   },
   noTicketsDiv: {
     display: "flex",
@@ -65,11 +79,22 @@ const useStyles = makeStyles((theme) => ({
   newMessagesCount: {
     position: "absolute",
     alignSelf: "center",
-    marginRight: 8,
+    marginRight: 6,
     marginLeft: "auto",
-    top: "10px",
-    left: "20px",
-    borderRadius: 0,
+    top: "8px",
+    left: "16px",
+    borderRadius: 3,
+    [theme.breakpoints.down('sm')]: {
+      top: "6px",
+      left: "12px",
+      marginRight: 4,
+    },
+    [theme.breakpoints.down('xs')]: {
+      top: "4px",
+      left: "8px",
+      marginRight: 2,
+      fontSize: "0.75em",
+    },
   },
   noTicketsText: {
     textAlign: "center",
@@ -78,16 +103,33 @@ const useStyles = makeStyles((theme) => ({
     lineHeight: "1.4",
   },
   connectionTag: {
-    background: "green",
+    background: theme.palette.mode === "light" 
+      ? "linear-gradient(135deg, #1abc9c 0%, #16a085 100%)" 
+      : "linear-gradient(135deg, #007bff 0%, #0056b3 100%)",
     color: "#FFF",
-    marginRight: 1,
-    padding: 1,
+    marginRight: 2,
+    marginBottom: 2,
+    padding: "1px 6px",
     fontWeight: 'bold',
-    paddingLeft: 5,
-    paddingRight: 5,
-    borderRadius: 3,
-    fontSize: "0.8em",
-    whiteSpace: "nowrap"
+    borderRadius: 4,
+    fontSize: "0.7em",
+    whiteSpace: "nowrap",
+    boxShadow: theme.palette.mode === "light" 
+      ? "0 1px 3px rgba(26, 188, 156, 0.3)" 
+      : "0 1px 3px rgba(0, 123, 255, 0.3)",
+    textTransform: "uppercase",
+    letterSpacing: "0.3px",
+    [theme.breakpoints.down('sm')]: {
+      fontSize: "0.65em",
+      padding: "1px 4px",
+      marginRight: 1,
+    },
+    [theme.breakpoints.down('xs')]: {
+      fontSize: "0.6em",
+      padding: "0px 3px",
+      marginRight: 1,
+      letterSpacing: "0.1px",
+    },
   },
   noTicketsTitle: {
     textAlign: "center",
@@ -99,22 +141,48 @@ const useStyles = makeStyles((theme) => ({
   contactNameWrapper: {
     display: "flex",
     justifyContent: "space-between",
-    marginLeft: "5px",
+    alignItems: "center",
+    marginLeft: "2px",
+    marginBottom: "2px",
+    gap: "4px",
+    [theme.breakpoints.down('sm')]: {
+      gap: "2px",
+      marginLeft: "1px",
+      flexWrap: "wrap",
+    },
+    [theme.breakpoints.down('xs')]: {
+      gap: "1px",
+      marginLeft: "0px",
+      flexDirection: "column",
+      alignItems: "flex-start",
+    },
   },
 
   lastMessageTime: {
     justifySelf: "flex-end",
     textAlign: "right",
     position: "relative",
-    top: -21,
-    background: '#333333',
+    top: -16,
+    background: theme.palette.mode === "light" ? '#333333' : '#444',
     color: '#ffffff',
-    border: '1px solid #3a3b6c',
-    borderRadius: 5,
-    padding: 1,
-    paddingLeft: 5,
-    paddingRight: 5,
-    fontSize: '0.9em',
+    border: theme.palette.mode === "light" ? '1px solid #3a3b6c' : '1px solid #555',
+    borderRadius: 3,
+    padding: "1px 4px",
+    fontSize: '0.75em',
+    minWidth: 'auto',
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '0.7em',
+      padding: "1px 3px",
+      top: -12,
+    },
+    [theme.breakpoints.down('xs')]: {
+      fontSize: '0.65em',
+      padding: "0px 2px",
+      top: -8,
+      position: "static",
+      display: "inline-block",
+      marginTop: "2px",
+    },
   },
 
   closedBadge: {
@@ -132,18 +200,52 @@ const useStyles = makeStyles((theme) => ({
 
   badgeStyle: {
     color: "white",
-    backgroundColor: green[500],
+    backgroundColor: theme.palette.mode === "light" ? "#1abc9c" : "#007bff",
   },
 
   acceptButton: {
     position: "absolute",
-    right: "108px",
-  },
-
-
-  acceptButton: {
-    position: "absolute",
-    left: "50%",
+    left: "22px",
+    transform: "translateX(0%)",
+    fontSize: "0.6rem !important",
+    padding: "3px 8px !important",
+    minWidth: "auto",
+    width: "auto",
+    maxWidth: "70px",
+    height: "28px",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "4px",
+    fontWeight: "500",
+    textTransform: "none",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+    transition: "all 0.2s ease",
+    "&:hover": {
+      boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+      transform: "translateY(-1px)",
+    },
+    [theme.breakpoints.down('sm')]: {
+      position: "relative",
+      left: "auto",
+      transform: "none",
+      marginTop: "4px",
+      width: "100%",
+      maxWidth: "100%",
+      fontSize: "0.55rem !important",
+      padding: "2px 6px !important",
+      height: "26px",
+    },
+    [theme.breakpoints.down('xs')]: {
+      fontSize: "0.5rem !important",
+      padding: "1px 4px !important",
+      minHeight: "24px",
+      height: "24px",
+      maxWidth: "65px",
+    },
   },
 
 
@@ -162,8 +264,7 @@ const useStyles = makeStyles((theme) => ({
   },
   secondaryContentSecond: {
     display: 'flex',
-    // marginTop: 5,
-    //marginLeft: "5px",
+    marginLeft: "6px",
     alignItems: "flex-start",
     flexWrap: "wrap",
     flexDirection: "row",
@@ -187,8 +288,54 @@ const useStyles = makeStyles((theme) => ({
     },
   },
     presence: {
-    color: theme?.mode === 'light' ? "blue" : "lightgreen",
+    color: theme?.mode === 'light' ? "#007bff" : "#1abc9c",
     fontWeight: "bold",
+  },
+  smallButton: {
+    fontSize: '0.6rem !important',
+    padding: '2px 6px !important',
+    borderRadius: '4px',
+    minWidth: 'auto',
+    width: 'auto',
+    maxWidth: '70px',
+    height: '26px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '0.55rem !important',
+      padding: '2px 6px !important',
+      height: '26px',
+      maxWidth: '100%',
+    },
+    [theme.breakpoints.down('xs')]: {
+      fontSize: '0.5rem !important',
+      padding: '1px 3px !important',
+      minHeight: '24px',
+      height: '24px',
+      maxWidth: '70px',
+    },
+  },
+  responsiveAvatar: {
+    width: "70px !important",
+    height: "70px !important",
+    marginLeft: "10px !important",
+    [theme.breakpoints.down('sm')]: {
+      width: "60px !important",
+      height: "60px !important",
+      marginTop: "-15px !important",
+      marginLeft: "2px !important",
+    },
+    [theme.breakpoints.down('xs')]: {
+      width: "50px !important",
+      height: "50px !important",
+      marginTop: "-10px !important",
+      marginLeft: "1px !important",
+      fontSize: "0.8rem !important",
+    },
   }
 }));
   {/*PLW DESIGN INSERIDO O dentro do const handleChangeTab*/}
@@ -270,7 +417,7 @@ const useStyles = makeStyles((theme) => ({
 
       if (minutesDifference >= 3 && minutesDifference <= 10) {
         labelText = `(${minutesDifference} m atrás)`;
-        labelColor = 'green';
+        labelColor = '#1abc9c';
       } else if (minutesDifference >= 30 && minutesDifference < 60) {
         labelText = `(${minutesDifference} m atrás)`;
         labelColor = 'Orange';
@@ -461,12 +608,13 @@ const useStyles = makeStyles((theme) => ({
           [classes.pendingTicket]: ticket.status === "pending",
         })}
       >
-        <Tooltip arrow placement="right" title={ticket.queue?.name?.toUpperCase() || "SEM FILA"} >
+        <Tooltip arrow placement="right" title={ticket.queue?.name?.toUpperCase() || i18n.t("queueSelect.inputLabel")} >
           <span style={{ backgroundColor: ticket.queue?.color || "#7C7C7C" }} className={classes.ticketQueueColor}></span>
         </Tooltip>
         <ListItemAvatar>
           {ticket.status !== "pending" ?
             <Avatar
+              className={classes.responsiveAvatar}
               style={{
                 marginTop: "-20px",
                 marginLeft: "-3px",
@@ -480,6 +628,7 @@ const useStyles = makeStyles((theme) => ({
               </Avatar>
             :
             <Avatar
+              className={classes.responsiveAvatar}
               style={{
                 marginTop: "-30px",
                 marginLeft: "0px",
@@ -549,7 +698,7 @@ const useStyles = makeStyles((theme) => ({
                 <span style={{ marginTop: 4, }} className={classes.secondaryContentSecond} >
                   {ticket?.whatsapp?.name ? <Badge className={classes.connectionTag}>{ticket?.whatsapp?.name?.toUpperCase()}</Badge> : <br></br>}
                   {ticketUser ? <Badge style={{ backgroundColor: "#000000" }} className={classes.connectionTag}>{ticketUser}</Badge> : <br></br>}				  
-                  <Badge style={{ backgroundColor: ticket.queue?.color || "#7c7c7c" }} className={classes.connectionTag}>{ticket.queue?.name?.toUpperCase() || "SEM FILA"}</Badge>
+                  <Badge style={{ backgroundColor: ticket.queue?.color || "#7c7c7c" }} className={classes.connectionTag}>{ticket.queue?.name?.toUpperCase() || i18n.t("queueSelect.inputLabel").toUpperCase()}</Badge>
                 </span>
 
                 {/* <span style={{ marginTop: 2, fontSize: 5 }} className={classes.secondaryContentSecond} >
@@ -610,13 +759,15 @@ const useStyles = makeStyles((theme) => ({
     <>
       <ButtonWithSpinner
         style={{
-          backgroundColor: 'green',
+          backgroundColor: '#1abc9c',
           color: 'white',
-          padding: '0px',
-          bottom: '17px',
-          borderRadius: '0px',
-          left: '8px',
-          fontSize: '0.6rem'
+          padding: '2px 6px',
+          top: '75px',
+          borderRadius: '4px',
+          left: '22px',
+          fontSize: '0.6rem',
+          width: '70px',
+          height: '26px'
         }}
         variant="contained"
         className={classes.acceptButton}
@@ -631,11 +782,13 @@ const useStyles = makeStyles((theme) => ({
         style={{
           backgroundColor: 'red',
           color: 'white',
-          padding: '0px',
-          bottom: '0px',
-          borderRadius: '0px',
-          left: '8px',
-          fontSize: '0.6rem'
+          padding: '2px 6px',
+          top: '103px',
+          borderRadius: '4px',
+          left: '22px',
+          fontSize: '0.6rem',
+          width: '70px',
+          height: '26px'
         }}
         variant="contained"
         className={classes.acceptButton}
@@ -652,13 +805,15 @@ const useStyles = makeStyles((theme) => ({
     <>
       <ButtonWithSpinner
         style={{
-          backgroundColor: 'green',
+          backgroundColor: '#1abc9c',
           color: 'white',
-          padding: '0px',
-          bottom: '17px',
-          borderRadius: '0px',
-          left: '8px',
-          fontSize: '0.6rem'
+          padding: '2px 6px',
+          top: '75px',
+          borderRadius: '4px',
+          left: '22px',
+          fontSize: '0.6rem',
+          width: '70px',
+          height: '26px'
         }}
         variant="contained"
         className={classes.acceptButton}
@@ -673,11 +828,13 @@ const useStyles = makeStyles((theme) => ({
         style={{
           backgroundColor: 'red',
           color: 'white',
-          padding: '0px',
-          bottom: '0px',
-          borderRadius: '0px',
-          left: '8px',
-          fontSize: '0.6rem'
+          padding: '2px 6px',
+          top: '103px',
+          borderRadius: '4px',
+          left: '22px',
+          fontSize: '0.6rem',
+          width: '70px',
+          height: '26px'
         }}
         variant="contained"
         className={classes.acceptButton}
@@ -696,11 +853,13 @@ const useStyles = makeStyles((theme) => ({
         style={{
           backgroundColor: 'blue',
           color: 'white',
-          padding: '0px',
-          bottom: '17px',
-          borderRadius: '0px',
-          left: '8px',
-          fontSize: '0.6rem'
+          padding: '2px 6px',
+          top: '75px',
+          borderRadius: '4px',
+          left: '22px',
+          fontSize: '0.6rem',
+          width: '70px',
+          height: '26px'
         }}
         variant="contained"
         className={classes.acceptButton}
@@ -715,11 +874,13 @@ const useStyles = makeStyles((theme) => ({
         style={{
           backgroundColor: 'red',
           color: 'white',
-          padding: '0px',
-          bottom: '0px',
-          borderRadius: '0px',
-          left: '8px',
-          fontSize: '0.6rem'
+          padding: '2px 6px',
+          top: '103px',
+          borderRadius: '4px',
+          left: '22px',
+          fontSize: '0.6rem',
+          width: '70px',
+          height: '26px'
         }}
         variant="contained"
         className={classes.acceptButton}
@@ -739,8 +900,8 @@ const useStyles = makeStyles((theme) => ({
         color: 'white',
         padding: '0px',
         bottom: '0px',
-        borderRadius: '0px',
-        left: '8px',
+        borderRadius: '4px',
+        left: '33px',
         fontSize: '0.6rem'
       }}
       variant="contained"
