@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useReducer, useContext } from "react";
-import openSocket from "../../services/socket-io";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 import { makeStyles } from "@material-ui/core/styles";
 import List from "@material-ui/core/List";
@@ -249,11 +249,15 @@ const TicketsList = (props) => {
 
 	}, [tickets, status, searchParam, queues, profile]);
 
+	const socketManager = useContext(SocketContext);
+
 	useEffect(() => {
-		const socket = openSocket();
-    if (!socket) {
-      return () => {}; 
-    }
+		if (!user?.companyId || !socketManager) return;
+		
+		const socket = socketManager.getSocket(user.companyId);
+		if (!socket) {
+			return () => {};
+		}
 
 		const shouldUpdateTicket = (ticket) =>
 			(!ticket.userId || ticket.userId === user?.id || showAll) &&
@@ -313,7 +317,10 @@ const TicketsList = (props) => {
 		});
 
 		return () => {
-			socket.disconnect();
+			if (socket) {
+				socket.off(`company-${user.companyId}-ticket`);
+				socket.off(`company-${user.companyId}-appMessage`);
+			}
 		};
 	}, [status, showAll, user, selectedQueueIds]);
 

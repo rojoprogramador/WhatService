@@ -11,6 +11,8 @@ module.exports = {
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || "whatcrmviper",
   username: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASS || "camilodev1993",
+  password: process.env.DB_PASS || (() => {
+    throw new Error('DB_PASS environment variable is required');
+  })(),
   logging: false
 };

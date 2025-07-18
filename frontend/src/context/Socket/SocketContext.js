@@ -76,12 +76,17 @@ const SocketManager = {
   socketReady: false,
 
   getSocket: function(companyId) {
+    console.log('🔌 SocketManager.getSocket called with companyId:', companyId);
+    
     let userId = null;
     if (localStorage.getItem("userId")) {
       userId = localStorage.getItem("userId");
     }
 
+    console.log('🔌 Socket check - userId:', userId, 'companyId:', companyId, 'currentSocket exists:', !!this.currentSocket);
+
     if (!companyId && !this.currentSocket) {
+      console.log('❌ No companyId and no currentSocket - returning DummySocket');
       return new DummySocket();
     }
 
@@ -91,7 +96,7 @@ const SocketManager = {
 
     if (companyId !== this.currentCompanyId || userId !== this.currentUserId) {
       if (this.currentSocket) {
-        console.warn("closing old socket - company or user changed");
+        console.log("🔌 Closing old socket - company or user changed");
         this.currentSocket.removeAllListeners();
         this.currentSocket.disconnect();
         this.currentSocket = null;
@@ -100,12 +105,15 @@ const SocketManager = {
       }
 
       let token = JSON.parse(localStorage.getItem("token"));
+      console.log('🔑 Token check - exists:', !!token, 'expired:', token ? isExpired(token) : 'no token');
+      
       if (!token) {
+        console.log('❌ No token - returning DummySocket');
         return new DummySocket();
       }
       
       if ( isExpired(token) ) {
-        console.warn("Expired token, reload after refresh");
+        console.warn("❌ Expired token, reload after refresh");
         setTimeout(() => {
           window.location.reload();
         },1000);
@@ -115,11 +123,18 @@ const SocketManager = {
       this.currentCompanyId = companyId;
       this.currentUserId = userId;
       
+      console.log('🔌 Creating new socket connection to:', process.env.REACT_APP_BACKEND_URL);
+      
       this.currentSocket = openSocket(process.env.REACT_APP_BACKEND_URL, {
         transports: ["websocket"],
         pingTimeout: 18000,
         pingInterval: 18000,
         query: { token },
+        forceNew: true,
+        reconnection: true,
+        timeout: 5000,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
       });
 
       this.currentSocket.io.on("reconnect_attempt", () => {
@@ -134,18 +149,28 @@ const SocketManager = {
         }
       });
       
+      this.currentSocket.on("connect", () => {
+        console.log('✅ Socket connected successfully to backend!');
+        console.log('✅ Socket ID:', this.currentSocket.id);
+        window.socketManager = this; // Make socket manager available globally for debugging
+      });
+
+      this.currentSocket.on("connect_error", (error) => {
+        console.error("❌ Socket connection error:", error);
+      });
+
       this.currentSocket.on("disconnect", (reason) => {
-        console.warn(`socket disconnected because: ${reason}`);
+        console.warn(`🔌 Socket disconnected because: ${reason}`);
         if (reason.startsWith("io server disconnect")) {
-          console.warn("tryng to reconnect", this.currentSocket);
+          console.warn("🔌 Trying to reconnect", this.currentSocket);
           token = JSON.parse(localStorage.getItem("token"));
           
           if ( isExpired(token) ) {
-            console.warn("Expired token - refreshing");
+            console.warn("❌ Expired token - refreshing");
             window.location.reload();
             return;
           }
-          console.warn("Reconnecting using refreshed token");
+          console.warn("🔌 Reconnecting using refreshed token");
           this.currentSocket.io.opts.query.token = token;
           this.currentSocket.io.opts.query.r = 1;
           this.currentSocket.connect();
@@ -166,6 +191,7 @@ const SocketManager = {
 
     }
     
+    console.log('🔌 Returning ManagedSocket wrapper');
     return new ManagedSocket(this);
   },
   
@@ -185,5 +211,10 @@ const SocketManager = {
 };
 
 const SocketContext = createContext()
+
+// Make SocketManager available globally for debugging
+if (typeof window !== 'undefined') {
+  window.SocketManager = SocketManager;
+}
 
 export { SocketContext, SocketManager };

@@ -1,4 +1,4 @@
-import { WAMessage, AnyMessageContent } from "@whiskeysockets/baileys";
+import { Message as WWebMessage, MessageMedia } from 'whatsapp-web.js';
 import * as Sentry from "@sentry/node";
 import fs from "fs";
 import { exec } from "child_process";
@@ -51,63 +51,19 @@ export const getMessageOptions = async (
   fileName: string,
   pathMedia: string,
   body?: string
-): Promise<any> => {
-  const mimeType = mime.lookup(pathMedia);
-  const typeMessage = mimeType.split("/")[0];
-
+): Promise<MessageMedia | null> => {
   try {
+    const mimeType = mime.lookup(pathMedia);
+    
     if (!mimeType) {
       throw new Error("Invalid mimetype");
     }
-    let options: AnyMessageContent;
 
-    if (typeMessage === "video") {
-      options = {
-        video: fs.readFileSync(pathMedia),
-        caption: body ? body : '',
-        fileName: fileName
-        // gifPlayback: true
-      };
-    } else if (typeMessage === "audio") {
-      const typeAudio = true; //fileName.includes("audio-record-site");
-      const convert = await processAudio(pathMedia);
-      if (typeAudio) {
-        options = {
-          audio: fs.readFileSync(convert),
-          mimetype: typeAudio ? "audio/mp4" : mimeType,
-          caption: body ? body : null,
-          ptt: true
-        };
-      } else {
-        options = {
-          audio: fs.readFileSync(convert),
-          mimetype: typeAudio ? "audio/mp4" : mimeType,
-          caption: body ? body : null,
-          ptt: true
-        };
-      }
-    } else if (typeMessage === "document") {
-      options = {
-        document: fs.readFileSync(pathMedia),
-        caption: body ? body : null,
-        fileName: fileName,
-        mimetype: mimeType
-      };
-    } else if (typeMessage === "application") {
-      options = {
-        document: fs.readFileSync(pathMedia),
-        caption: body ? body : null,
-        fileName: fileName,
-        mimetype: mimeType
-      };
-    } else {
-      options = {
-        image: fs.readFileSync(pathMedia),
-        caption: body ? body : null
-      };
-    }
-
-    return options;
+    // Crear MessageMedia desde el archivo
+    const media = MessageMedia.fromFilePath(pathMedia);
+    media.filename = fileName;
+    
+    return media;
   } catch (e) {
     Sentry.captureException(e);
     console.log(e);
@@ -120,78 +76,89 @@ const SendWhatsAppMedia = async ({
   ticket,
   body,
   isForwarded = false
-}: Request): Promise<WAMessage> => {
+}: Request): Promise<WWebMessage> => {
   try {
     const wbot = await GetTicketWbot(ticket);
 
+    // Formatear número de contacto para whatsapp-web.js
+    const chatId = `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "c.us"}`;
+    
+    // Obtener el chat
+    const chat = await wbot.getChatById(chatId);
+    
     const pathMedia = media.path;
     const typeMessage = media.mimetype.split("/")[0];
-    let options: AnyMessageContent;
-    const bodyMessage = formatBody(body, ticket.contact)
+    const bodyMessage = formatBody(body, ticket.contact);
 
-    if (typeMessage === "video") {
-      options = {
-        video: fs.readFileSync(pathMedia),
-        caption: bodyMessage,
-        fileName: media.originalname,
-        contextInfo: { forwardingScore: isForwarded ? 2 : 0, isForwarded: isForwarded }
-        // gifPlayback: true
-      };
-    } else if (typeMessage === "audio") {
-      const typeAudio = media.originalname.includes("audio-record-site");
-      if (typeAudio) {
-        const convert = await processAudio(media.path);
-        options = {
-          audio: fs.readFileSync(convert),
-          mimetype: typeAudio ? "audio/mp4" : media.mimetype,
-          ptt: true,
-          contextInfo: { forwardingScore: isForwarded ? 2 : 0, isForwarded: isForwarded }
-        };
+    let messageMedia: MessageMedia;
+    let sentMessage: WWebMessage;
+
+    if (typeMessage === "audio") {
+      const isVoiceMessage = media.originalname.includes("audio-record-site");
+      
+      if (isVoiceMessage) {
+        // Procesar audio para mensaje de voz
+        const convertedAudio = await processAudio(media.path);
+        messageMedia = MessageMedia.fromFilePath(convertedAudio);
+        messageMedia.filename = media.originalname;
+        
+        // Enviar como mensaje de voz (PTT)
+        sentMessage = await chat.sendMessage(messageMedia, {
+          sendAudioAsVoice: true
+        });
+        
+        // Limpiar archivo convertido
+        fs.unlinkSync(convertedAudio);
       } else {
-        const convert = await processAudioFile(media.path);
-        options = {
-          audio: fs.readFileSync(convert),
-          mimetype: typeAudio ? "audio/mp4" : media.mimetype,
-          contextInfo: { forwardingScore: isForwarded ? 2 : 0, isForwarded: isForwarded }
-        };
+        // Procesar archivo de audio normal
+        const convertedAudio = await processAudioFile(media.path);
+        messageMedia = MessageMedia.fromFilePath(convertedAudio);
+        messageMedia.filename = media.originalname;
+        
+        // Enviar como archivo de audio
+        sentMessage = await chat.sendMessage(messageMedia);
+        
+        // Limpiar archivo convertido
+        fs.unlinkSync(convertedAudio);
       }
-    } else if (typeMessage === "document" || typeMessage === "text") {
-      options = {
-        document: fs.readFileSync(pathMedia),
-        caption: bodyMessage,
-        fileName: media.originalname,
-        mimetype: media.mimetype,
-        contextInfo: { forwardingScore: isForwarded ? 2 : 0, isForwarded: isForwarded }
-      };
-    } else if (typeMessage === "application") {
-      options = {
-        document: fs.readFileSync(pathMedia),
-        caption: bodyMessage,
-        fileName: media.originalname,
-        mimetype: media.mimetype,
-        contextInfo: { forwardingScore: isForwarded ? 2 : 0, isForwarded: isForwarded }
-      };
     } else {
-      options = {
-        image: fs.readFileSync(pathMedia),
-        caption: bodyMessage,
-        contextInfo: { forwardingScore: isForwarded ? 2 : 0, isForwarded: isForwarded }
-      };
+      // Para otros tipos de media (imagen, video, documento)
+      messageMedia = MessageMedia.fromFilePath(pathMedia);
+      messageMedia.filename = media.originalname;
+      
+      // Enviar media con caption si existe
+      if (bodyMessage) {
+        sentMessage = await chat.sendMessage(messageMedia, {
+          caption: bodyMessage
+        });
+      } else {
+        sentMessage = await chat.sendMessage(messageMedia);
+      }
     }
 
-    const sentMessage = await wbot.sendMessage(
-      `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
-      {
-        ...options
-      }
-    );
+    // Marcar como reenviado si es necesario
+    if (isForwarded && sentMessage) {
+      console.log('Media sent as forwarded:', sentMessage.id._serialized);
+    }
 
-    await ticket.update({ lastMessage: bodyMessage });
+    // Actualizar último mensaje del ticket
+    await ticket.update({ 
+      lastMessage: bodyMessage || `📎 ${media.originalname}` 
+    });
+
+    // Limpiar archivo original después del envío exitoso
+    try {
+      if (fs.existsSync(pathMedia)) {
+        fs.unlinkSync(pathMedia);
+      }
+    } catch (unlinkError) {
+      console.warn('Error deleting uploaded file:', unlinkError);
+    }
 
     return sentMessage;
   } catch (err) {
     Sentry.captureException(err);
-    console.log(err);
+    console.error('Error sending WhatsApp media:', err);
     throw new AppError("ERR_SENDING_WAPP_MSG");
   }
 };

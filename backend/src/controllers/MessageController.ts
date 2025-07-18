@@ -23,6 +23,7 @@ import ShowContactService from "../services/ContactServices/ShowContactService";
 import SendWhatsAppMedia from "../services/WbotServices/SendWhatsAppMedia";
 import path from "path";
 import SendWhatsAppMessage from "../services/WbotServices/SendWhatsAppMessage";
+import CreateMessageService from "../services/MessageServices/CreateMessageService";
 import EditWhatsAppMessage from "../services/WbotServices/EditWhatsAppMessage";
 import ShowMessageService, { GetWhatsAppFromMessage } from "../services/MessageServices/ShowMessageService";
 type IndexQuery = {
@@ -71,7 +72,22 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   const medias = req.files as Express.Multer.File[];
   const { companyId } = req.user;
 
+  console.log('📤 MessageController.store called with:', {
+    ticketId,
+    companyId,
+    bodyLength: body?.length,
+    hasMedias: !!medias?.length
+  });
+
   const ticket = await ShowTicketService(ticketId, companyId);
+  
+  console.log('📤 Ticket retrieved:', {
+    id: ticket.id,
+    contactId: ticket.contactId,
+    contactNumber: ticket.contact?.number,
+    whatsappId: ticket.whatsappId,
+    status: ticket.status
+  });
 
   SetTicketMessagesAsRead(ticket);
 
@@ -83,7 +99,61 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
       })
     );
   } else {
-    const send = await SendWhatsAppMessage({ body, ticket, quotedMsg });
+    try {
+      console.log('📤 Starting message send process:', { 
+        ticketId: ticket.id, 
+        contactId: ticket.contactId, 
+        bodyLength: body?.length 
+      });
+      
+      const sentMessage = await SendWhatsAppMessage({ body, ticket, quotedMsg });
+      console.log('📤 SendWhatsAppMessage result:', {
+        success: !!sentMessage,
+        hasId: !!(sentMessage?.id),
+        hasSerialized: !!(sentMessage?.id?._serialized),
+        id: sentMessage?.id?._serialized,
+        type: sentMessage?.type,
+        bodyFromWApp: sentMessage?.body?.substring(0, 50)
+      });
+      
+      // Crear el mensaje en la base de datos y emitir socket event
+      if (sentMessage && sentMessage.id && sentMessage.id._serialized) {
+        console.log('💾 Persisting sent message to database:', sentMessage.id._serialized);
+        
+        const messageData = {
+          id: sentMessage.id._serialized,
+          ticketId: ticket.id,
+          contactId: ticket.contactId,
+          body: sentMessage.body || body,
+          fromMe: true,
+          read: true,
+          mediaType: sentMessage.type || 'chat'
+        };
+        
+        console.log('💾 Message data prepared:', messageData);
+        
+        const createdMessage = await CreateMessageService({
+          messageData,
+          companyId
+        });
+        
+        console.log('✅ Message successfully persisted to database:', {
+          id: createdMessage.id,
+          ticketId: createdMessage.ticketId,
+          fromMe: createdMessage.fromMe
+        });
+      } else {
+        console.error('❌ Failed to persist message - invalid sentMessage or ID:', {
+          sentMessage: !!sentMessage,
+          hasId: !!(sentMessage?.id),
+          serializedId: sentMessage?.id?._serialized
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error in message sending/persistence:', error);
+      console.error('Error stack:', error.stack);
+      throw error;
+    }
   }
 
   return res.send();

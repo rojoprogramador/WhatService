@@ -1,20 +1,22 @@
 import axios from "axios";
 import Ticket from "../../models/Ticket";
 import QueueIntegrations from "../../models/QueueIntegrations";
-import { WASocket, delay, proto } from "@whiskeysockets/baileys";
+import { Client, MessageMedia, Message as WhatsAppMessage } from "whatsapp-web.js";
 import { getBodyMessage } from "../WbotServices/wbotMessageListener";
 import { logger } from "../../utils/logger";
 import { isNil } from "lodash";
 import UpdateTicketService from "../TicketServices/UpdateTicketService";
 
+// Función auxiliar para delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-type Session = WASocket & {
+type Session = Client & {
     id?: number;
 };
 
 interface Request {
     wbot: Session;
-    msg: proto.IWebMessageInfo;
+    msg: WhatsAppMessage;
     ticket: Ticket;
     typebot: QueueIntegrations;
 }
@@ -27,7 +29,7 @@ const typebotListener = async ({
     typebot
 }: Request): Promise<void> => {
 
-    if (msg.key.remoteJid === 'status@broadcast') return;
+    if (msg.from === 'status@broadcast') return;
 
     const { urlN8N: url,
         typebotExpires,
@@ -39,13 +41,16 @@ const typebotListener = async ({
         typebotRestartMessage
     } = typebot;
 
-    const number = msg.key.remoteJid.replace(/\D/g, '');
+    const number = msg.from.replace(/\D/g, '');
 
     let body = getBodyMessage(msg);
 
     async function createSession(msg, typebot, number) {
         try {
             const id = Math.floor(Math.random() * 10000000000).toString();
+
+            const contact = await msg.getContact();
+            const pushName = contact.pushname || contact.name || number;
 
             const reqData = JSON.stringify({
                 "isStreamEnabled": true,
@@ -54,7 +59,7 @@ const typebotListener = async ({
                 "isOnlyRegistering": false,
                 "prefilledVariables": {
                     "number": number,
-                    "pushName": msg.pushName || ""
+                    "pushName": pushName
                 },
             });
 
@@ -145,7 +150,7 @@ const typebotListener = async ({
             }
 
             if (messages?.length === 0) {
-                await wbot.sendMessage(`${number}@c.us`, { text: typebotUnknownMessage });
+                await wbot.sendMessage(`${number}@c.us`, typebotUnknownMessage);
             } else {
                 for (const message of messages) {
                     if (message.type === 'text') {
@@ -284,31 +289,21 @@ const typebotListener = async ({
                             }
                         }
 
-                        await wbot.presenceSubscribe(msg.key.remoteJid)
-                        //await delay(2000)
-                        await wbot.sendPresenceUpdate('composing', msg.key.remoteJid)
-                        await delay(typebotDelayMessage)
-                        await wbot.sendPresenceUpdate('paused', msg.key.remoteJid)
+                        // En whatsapp-web.js, el manejo de presencia es diferente
+                        const chat = await wbot.getChatById(msg.from);
+                        await chat.sendStateTyping();
+                        await delay(typebotDelayMessage);
 
-
-                        await wbot.sendMessage(msg.key.remoteJid, { text: formattedText });
+                        await wbot.sendMessage(msg.from, formattedText);
                     }
 
                     if (message.type === 'audio') {
-                        await wbot.presenceSubscribe(msg.key.remoteJid)
-                        //await delay(2000)
-                        await wbot.sendPresenceUpdate('composing', msg.key.remoteJid)
-                        await delay(typebotDelayMessage)
-                        await wbot.sendPresenceUpdate('paused', msg.key.remoteJid)
-                        const media = {
-                            audio: {
-                                url: message.content.url,
-                                mimetype: 'audio/mp4',
-                                ptt: true
-                            },
-                        }
-                        await wbot.sendMessage(msg.key.remoteJid, media);
-
+                        const chat = await wbot.getChatById(msg.from);
+                        await chat.sendStateTyping();
+                        await delay(typebotDelayMessage);
+                        
+                        const media = await MessageMedia.fromUrl(message.content.url);
+                        await wbot.sendMessage(msg.from, media, { sendAudioAsVoice: true });
                     }
 
                     // if (message.type === 'embed') {
@@ -328,18 +323,12 @@ const typebotListener = async ({
                     // }
 
                     if (message.type === 'image') {
-                        await wbot.presenceSubscribe(msg.key.remoteJid)
-                        //await delay(2000)
-                        await wbot.sendPresenceUpdate('composing', msg.key.remoteJid)
-                        await delay(typebotDelayMessage)
-                        await wbot.sendPresenceUpdate('paused', msg.key.remoteJid)
-                        const media = {
-                            image: {
-                                url: message.content.url,
-                            },
-
-                        }
-                        await wbot.sendMessage(msg.key.remoteJid, media);
+                        const chat = await wbot.getChatById(msg.from);
+                        await chat.sendStateTyping();
+                        await delay(typebotDelayMessage);
+                        
+                        const media = await MessageMedia.fromUrl(message.content.url);
+                        await wbot.sendMessage(msg.from, media);
                     }
 
                     // if (message.type === 'video' ) {
@@ -365,12 +354,10 @@ const typebotListener = async ({
                             formattedText += `▶️ ${item.content}\n`;
                         }
                         formattedText = formattedText.replace(/\n$/, '');
-                        await wbot.presenceSubscribe(msg.key.remoteJid)
-                        //await delay(2000)
-                        await wbot.sendPresenceUpdate('composing', msg.key.remoteJid)
-                        await delay(typebotDelayMessage)
-                        await wbot.sendPresenceUpdate('paused', msg.key.remoteJid)
-                        await wbot.sendMessage(msg.key.remoteJid, { text: formattedText });
+                        const chat = await wbot.getChatById(msg.from);
+                        await chat.sendStateTyping();
+                        await delay(typebotDelayMessage);
+                        await wbot.sendMessage(msg.from, formattedText);
 
                     }
                 }
@@ -385,7 +372,7 @@ const typebotListener = async ({
 
             await ticket.reload();
 
-            await wbot.sendMessage(`${number}@c.us`, { text: typebotRestartMessage })
+            await wbot.sendMessage(`${number}@c.us`, typebotRestartMessage)
 
         }
         if (body === typebotKeywordFinish) {

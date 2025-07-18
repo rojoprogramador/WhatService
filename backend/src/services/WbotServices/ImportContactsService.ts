@@ -3,7 +3,7 @@ import GetDefaultWhatsApp from "../../helpers/GetDefaultWhatsApp";
 import { getWbot } from "../../libs/wbot";
 import Contact from "../../models/Contact";
 import { logger } from "../../utils/logger";
-import ShowBaileysService from "../BaileysServices/ShowBaileysService";
+// import ShowBaileysService from "../BaileysServices/ShowBaileysService";
 import CreateContactService from "../ContactServices/CreateContactService";
 import { isString, isArray } from "lodash";
 import path from "path";
@@ -16,8 +16,13 @@ const ImportContactsService = async (companyId: number): Promise<void> => {
   let phoneContacts;
 
   try {
-    const contactsString = await ShowBaileysService(wbot.id);
-    phoneContacts = JSON.parse(JSON.stringify(contactsString.contacts));
+    // Obtener contactos desde whatsapp-web.js
+    const contacts = await wbot.getContacts();
+    phoneContacts = contacts.map(contact => ({
+      id: contact.id._serialized,
+      name: contact.name || contact.pushname,
+      notify: contact.pushname
+    }));
 
     const publicFolder = path.resolve(__dirname, "..", "..", "..", "public");
     const beforeFilePath = path.join(publicFolder, 'contatos_antes.txt');
@@ -50,7 +55,8 @@ const ImportContactsService = async (companyId: number): Promise<void> => {
   if (isArray(phoneContactsList)) {
     phoneContactsList.forEach(async ({ id, name, notify }) => {
       if (id === "status@broadcast" || id.includes("g.us")) return;
-      const number = id.replace(/\D/g, "");
+      // Convertir formato de ID de whatsapp-web.js a número
+      const number = id.replace(/@c\.us$/, '').replace(/\D/g, "");
 
       const existingContact = await Contact.findOne({
         where: { number, companyId }

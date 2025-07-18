@@ -282,6 +282,7 @@ const useStyles = makeStyles((theme) => ({
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_MESSAGES") {
+    console.log('📥 LOAD_MESSAGES received:', action.payload.length, 'messages');
     const messages = action.payload;
     const newMessages = [];
 
@@ -294,23 +295,32 @@ const reducer = (state, action) => {
       }
     });
 
-    return [...newMessages, ...state];
+    // Correct ordering: older messages first, then newer ones
+    const result = [...state, ...newMessages];
+    console.log('📥 After LOAD_MESSAGES, total messages:', result.length);
+    return result;
   }
 
   if (action.type === "ADD_MESSAGE") {
+    console.log('➕ ADD_MESSAGE received:', action.payload.id);
     const newMessage = action.payload;
     const messageIndex = state.findIndex((m) => m.id === newMessage.id);
 
     if (messageIndex !== -1) {
+      console.log('✏️ Updating existing message');
       state[messageIndex] = newMessage;
     } else {
+      console.log('🆕 Adding new message to end');
       state.push(newMessage);
     }
 
-    return [...state];
+    const result = [...state];
+    console.log('➕ After ADD_MESSAGE, total messages:', result.length);
+    return result;
   }
 
   if (action.type === "UPDATE_MESSAGE") {
+    console.log('🔄 UPDATE_MESSAGE received:', action.payload.id);
     const messageToUpdate = action.payload;
     const messageIndex = state.findIndex((m) => m.id === messageToUpdate.id);
 
@@ -322,6 +332,7 @@ const reducer = (state, action) => {
   }
 
   if (action.type === "RESET") {
+    console.log('🧹 RESET messages list');
     return [];
   }
 };
@@ -348,6 +359,7 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
     dispatch({ type: "RESET" });
     setPageNumber(1);
 
+    console.log('🎯 MessagesList currentTicketId updated to:', ticketId);
     currentTicketId.current = ticketId;
   }, [ticketId]);
 
@@ -355,28 +367,49 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
     setLoading(true);
     const delayDebounceFn = setTimeout(() => {
       const fetchMessages = async () => {
-        if (ticketId === undefined) return;
+        if (ticketId === undefined) {
+          console.log('❌ No ticketId provided');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('📡 Fetching messages for ticket:', ticketId, 'page:', pageNumber);
+        
         try {
           const { data } = await api.get("/messages/" + ticketId, {
             params: { pageNumber },
           });
 
+          console.log('📨 Received messages:', {
+            ticketId,
+            pageNumber,
+            messagesCount: data.messages?.length || 0,
+            hasMore: data.hasMore,
+            currentTicketStillCurrent: currentTicketId.current === ticketId
+          });
+
           if (currentTicketId.current === ticketId) {
-            dispatch({ type: "LOAD_MESSAGES", payload: data.messages });
+            dispatch({ type: "LOAD_MESSAGES", payload: data.messages || [] });
             setHasMore(data.hasMore);
             setLoading(false);
-          }
-
-          if (pageNumber === 1 && data.messages.length > 1) {
-            scrollToBottom();
+            
+            // Scroll to bottom only for first page load
+            if (pageNumber === 1 && data.messages && data.messages.length > 0) {
+              setTimeout(() => scrollToBottom(), 100);
+            }
+          } else {
+            console.log('🚫 Ignoring messages - ticket changed during fetch');
+            setLoading(false);
           }
         } catch (err) {
+          console.error('❌ Error fetching messages:', err);
           setLoading(false);
           toastError(err);
         }
       };
       fetchMessages();
-    }, 500);
+    }, 300); // Reduced delay for faster loading
+    
     return () => {
       clearTimeout(delayDebounceFn);
     };
@@ -386,15 +419,136 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
     const companyId = localStorage.getItem("companyId");
     const socket = socketManager.getSocket(companyId);
 
-    socket.on("ready", () => socket.emit("joinChatBox", `${ticket.id}`));
+    console.log('🔌 MessagesList setting up socket connection:', {
+      companyId,
+      ticketId: ticket.id,
+      socketConnected: socket.connected,
+      eventName: `company-${companyId}-appMessage`
+    });
+
+    socket.on("ready", () => {
+      console.log('🔌 Socket ready, joining multiple rooms for ticket:', ticket.id, 'status:', ticket.status);
+      
+      // Unirse a la sala específica del ticket
+      socket.emit("joinChatBox", `${ticket.id}`);
+      
+      // Unirse a las salas de estado del ticket para recibir mensajes desde celular
+      if (ticket.status) {
+        socket.emit("joinTickets", ticket.status);  // "closed", "open", "pending"
+        console.log('🔌 Joined ticket status room:', ticket.status);
+      }
+      
+      // Unirse a notificaciones de la company
+      socket.emit("joinNotification");
+      
+      console.log('🔌 Joined rooms:', {
+        ticketRoom: ticket.id,
+        statusRoom: ticket.status,
+        notificationRoom: 'company-notifications'
+      });
+    });
+
+    socket.on("connect", () => {
+      console.log('🔌 Socket connected to server');
+    });
+
+    socket.on("disconnect", () => {
+      console.log('🔌 Socket disconnected from server');
+    });
 
     socket.on(`company-${companyId}-appMessage`, (data) => {
-      if (data.action === "create" && data.message.ticketId === currentTicketId.current) {
+      // Verificar si el mensaje pertenece a esta conversación
+      const isCorrectTicket = String(data.message?.ticketId) === String(currentTicketId.current);
+      
+      // Para mensajes fromMe (enviados desde celular), verificar si el ticket del mensaje
+      // corresponde al mismo contacto (por número de teléfono)
+      const messageFromMe = data.message?.fromMe;
+      const messageTicketContactNumber = data.ticket?.contact?.number;
+      const currentTicketContactNumber = ticket?.contact?.number;
+      const isFromMeToSameContact = messageFromMe && 
+        messageTicketContactNumber === currentTicketContactNumber;
+      
+      // Para mensajes recibidos, verificar número del contacto
+      const isSamePhoneNumber = !messageFromMe && 
+        data.message?.contact?.number === ticket?.contact?.number;
+      
+      const shouldAddMessage = isCorrectTicket || isFromMeToSameContact || isSamePhoneNumber;
+      
+      console.log('📨 MessagesList received socket event company-' + companyId + '-appMessage:', {
+        action: data.action,
+        messageId: data.message?.id,
+        messageBody: data.message?.body?.substring(0, 50) + '...',
+        messageFromMe: data.message?.fromMe,
+        messageTicketId: data.message?.ticketId,
+        currentTicketId: currentTicketId.current,
+        isCorrectTicket: isCorrectTicket,
+        isFromMeToSameContact: isFromMeToSameContact,
+        isSamePhoneNumber: isSamePhoneNumber,
+        shouldAddMessage: shouldAddMessage,
+        messageTicketContactNumber: messageTicketContactNumber,
+        currentTicketContactNumber: currentTicketContactNumber,
+        messageContactNumber: data.message?.contact?.number
+      });
+
+      // Log the full message object for debugging
+      console.log('📨 Full message data:', data.message);
+      console.log('📨 Full ticket data:', data.ticket);
+      
+      // DEBUGGING: Mostrar detalles exactos del mismatch
+      console.log('🔍 TICKET ID COMPARISON DETAILS:', {
+        messageTicketId: data.message?.ticketId,
+        messageTicketIdType: typeof data.message?.ticketId,
+        currentTicketId: currentTicketId.current,
+        currentTicketIdType: typeof currentTicketId.current,
+        stringMessageTicketId: String(data.message?.ticketId),
+        stringCurrentTicketId: String(currentTicketId.current),
+        exactMatch: String(data.message?.ticketId) === String(currentTicketId.current),
+        contactNumbers: {
+          messageContact: data.message?.contact?.number,
+          currentTicketContact: ticket?.contact?.number
+        },
+        whatsappIds: {
+          messageWhatsappId: data.message?.whatsappId,
+          currentWhatsappId: ticket?.whatsappId
+        },
+        shouldAcceptMessage: shouldAddMessage,
+        reasonForAcceptance: isCorrectTicket ? 'EXACT_TICKET_MATCH' : isSamePhoneNumber ? 'SAME_PHONE_NUMBER' : 'NO_MATCH'
+      });
+      
+      if (data.action === "create" && shouldAddMessage) {
+        let reason = 'UNKNOWN';
+        if (isCorrectTicket) reason = 'EXACT_TICKET_MATCH';
+        else if (isFromMeToSameContact) reason = 'FROM_ME_SAME_CONTACT';
+        else if (isSamePhoneNumber) reason = 'SAME_PHONE_NUMBER';
+        
+        console.log('✅ Adding message to MessagesList:', {
+          reason: reason,
+          messageId: data.message.id,
+          fromMe: data.message.fromMe,
+          body: data.message.body?.substring(0, 30),
+          ticketId: data.message.ticketId,
+          dispatchingToReducer: true
+        });
         dispatch({ type: "ADD_MESSAGE", payload: data.message });
-        scrollToBottom();
+        setTimeout(() => scrollToBottom(), 50);
+        console.log('✅ Message dispatched successfully');
+      } else if (data.action === "create") {
+        console.log('❌ NOT adding message - no match:', {
+          messageTicketId: data.message?.ticketId,
+          currentTicketId: currentTicketId.current,
+          isCorrectTicket: isCorrectTicket,
+          isFromMeToSameContact: isFromMeToSameContact,
+          isSamePhoneNumber: isSamePhoneNumber,
+          messageFromMe: data.message?.fromMe,
+          messageTicketContactNumber: messageTicketContactNumber,
+          currentTicketContactNumber: currentTicketContactNumber,
+          messageForDifferentConversation: true,
+          action: data.action
+        });
       }
 
-      if (data.action === "update" && data.message.ticketId === currentTicketId.current) {
+      if (data.action === "update" && shouldAddMessage) {
+        console.log('🔄 Updating message in MessagesList:', data.message.id);
         dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
       }
     });
@@ -743,8 +897,19 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   };
 
   const renderMessages = () => {
+    console.log('🎨 renderMessages called with:', {
+      messagesCount: messagesList.length,
+      messages: messagesList.map(m => ({ id: m.id, body: m.body?.substring(0, 20), fromMe: m.fromMe }))
+    });
+    
     if (messagesList.length > 0) {
       const viewMessagesList = messagesList.map((message, index) => {
+        console.log('🎨 Rendering message:', { 
+          id: message.id, 
+          body: message.body?.substring(0, 30), 
+          fromMe: message.fromMe,
+          mediaType: message.mediaType 
+        });
 
         if (message.mediaType === "call_log") {
           return (
@@ -986,7 +1151,15 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
         className={classes.messagesList}
         onScroll={handleScroll}
       >
-        {messagesList.length > 0 ? renderMessages() : []}
+        {console.log('🎨 Rendering messagesList:', {
+          messagesListLength: messagesList.length,
+          hasMessages: messagesList.length > 0,
+          firstMessage: messagesList[0]?.id,
+          lastMessage: messagesList[messagesList.length - 1]?.id
+        })}
+        {messagesList.length > 0 ? renderMessages() : (
+          <div>📭 No hay mensajes para mostrar (messagesList.length = {messagesList.length})</div>
+        )}
       </div>
       {loading && (
         <div>

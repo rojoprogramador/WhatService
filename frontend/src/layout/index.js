@@ -94,7 +94,8 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.enteringScreen,
     }),
     [theme.breakpoints.down("sm")]: {
-      display: "none"
+      width: `calc(100% - ${theme.spacing(7) + 1}px)`,
+      marginLeft: theme.spacing(7) + 1,
     }
   },
   menuButton: {
@@ -117,7 +118,7 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.enteringScreen,
     }),
     [theme.breakpoints.down("sm")]: {
-      width: "100%"
+      width: theme.spacing(7),
     },
     ...theme.scrollbarStylesSoft
   },
@@ -132,7 +133,7 @@ const useStyles = makeStyles((theme) => ({
       width: theme.spacing(9),
     },
     [theme.breakpoints.down("sm")]: {
-      width: "100%"
+      width: theme.spacing(7),
     }
   },
   appBarSpacer: {

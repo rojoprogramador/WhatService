@@ -298,12 +298,17 @@ const useStyles = makeStyles((theme) => ({
         </Badge>
       );
       // Agendando a próxima atualização após 30 segundos
-      setTimeout(updateLastInteractionLabel, 30 * 1000);
+      return setTimeout(updateLastInteractionLabel, 30 * 1000);
     };
 
     // Inicializando a primeira atualização
-    updateLastInteractionLabel();
+    const timeoutId = updateLastInteractionLabel();
 
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [ticket]); // Executando apenas uma vez ao montar o componente
 
   const handleReopenTicket = async (id) => {
@@ -500,9 +505,6 @@ const useStyles = makeStyles((theme) => ({
             color='textPrimary'
           >
             <strong>{ticket.contact.name} {lastInteractionLabel}</strong>
-        <ListItemSecondaryAction>
-          <Box className={classes.ticketInfo1}>{renderTicketInfo()}</Box>
-        </ListItemSecondaryAction>
                 {profile === "admin" && (
                   <Tooltip title="Espiar Conversa">
                     <VisibilityIcon
@@ -517,6 +519,9 @@ const useStyles = makeStyles((theme) => ({
                     />
                   </Tooltip>
                 )}
+        <ListItemSecondaryAction>
+          <Box className={classes.ticketInfo1}>{renderTicketInfo()}</Box>
+        </ListItemSecondaryAction>
               </Typography>
         </span>
 

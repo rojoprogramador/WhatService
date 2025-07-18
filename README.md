@@ -1,10 +1,22 @@
-# Whaticket - Configuración del Proyecto
+# 🚀 Whaticket - Sistema de Tickets WhatsApp (Colombia)
 
-## Requisitos Previos
-- Docker Desktop
-- Node Version Manager (NVM)
-- PostgreSQL
-- Redis (via Docker)
+## 📋 Migración Completa: Baileys → whatsapp-web.js
+✅ **Estado**: Migración completada exitosamente  
+🇨🇴 **Configurado para**: Colombia - Modelo de administración manual  
+📱 **WhatsApp Integration**: whatsapp-web.js (estable y confiable)
+
+## 🎯 Modelo de Negocio - Colombia
+- **Super Admin**: Control total desde panel administrativo
+- **Sin pagos automáticos**: Gestión manual de clientes
+- **Escalable**: Límites personalizables por empresa
+- **B2B Friendly**: Ideal para licencias anuales/mensuales
+
+## 💻 Requisitos del Sistema
+- **Node.js**: v18.20.4+ (Backend) y v16.x (Frontend)  
+- **PostgreSQL**: v12+
+- **Redis**: v6+ (recomendado para producción)
+- **nvm**: Para gestión de versiones Node.js
+- **Git**: Para control de versiones
 
 ## Configuración del Entorno
 
@@ -69,9 +81,9 @@ REDIS_OPT_LIMITER_DURATION=3000
 cd backend
 npm install
 
-# Usar Node.js v16 para el backend (importante para compatibilidad)
-nvm install 16
-nvm use 16
+# Usar Node.js v18+ para el backend (requerido para whatsapp-web.js)
+nvm install 18.20.4
+nvm use 18.20.4
 
 # Compilar TypeScript
 npm run build
@@ -96,11 +108,11 @@ npm start
 # Verificar versiones instaladas
 nvm list
 
-# Instalar Node.js 14 para el frontend
-nvm install 14.21.3
+# Instalar Node.js 16+ para el frontend
+nvm install 16.20.2
 
-# Cambiar a Node.js 14
-nvm use 14.21.3
+# Cambiar a Node.js 16+
+nvm use 16.20.2
 ```
 
 #### Configuración del Frontend
@@ -173,10 +185,10 @@ npm start
 ```
 
 ### Conflictos de Versiones de Node.js
-El frontend funciona mejor con Node.js 14.x. Si tienes problemas:
+El frontend requiere Node.js 16+ para compatibilidad. Si tienes problemas:
 ```bash
 # Asegúrate de estar usando la versión correcta
-nvm use 14.21.3
+nvm use 16.20.2
 
 # Limpia la caché de npm
 npm cache clean --force
@@ -294,8 +306,8 @@ npm install openai
 ```
 
 ### Configuración Recomendada para el Proyecto
-- **Backend**: Node.js v16.20.2
-- **Frontend**: Node.js v14.21.3
+- **Backend**: Node.js v18.20.4+ (requerido para whatsapp-web.js)
+- **Frontend**: Node.js v16.20.2+
 - **PostgreSQL**: Puerto 5432
 - **Redis**: Puerto 6379
 - **Backend URL**: http://localhost:8080
@@ -354,10 +366,11 @@ El frontend está desarrollado en React y utiliza Material-UI como biblioteca de
 
 ### Flujo de Trabajo Principal
 
-1. El backend se conecta a WhatsApp mediante la biblioteca Baileys
+1. El backend se conecta a WhatsApp mediante **whatsapp-web.js** (migrado desde Baileys)
 2. Los mensajes entrantes de WhatsApp se procesan y se convierten en tickets
 3. El frontend muestra estos tickets y permite a los agentes responderlos
 4. Las respuestas se envían de vuelta a WhatsApp a través del backend
+5. **Sistema estable** con recepción y envío de mensajes confirmado
 
 ### Bases de Datos
 
@@ -372,10 +385,13 @@ El frontend está desarrollado en React y utiliza Material-UI como biblioteca de
   - Contraseña: 123456
 
 ## Estado Actual
-- Redis funcionando en puerto 6379
-- PostgreSQL configurado en puerto 5432
-- Backend ejecutándose en puerto 8080 (Node.js v16)
-- Frontend ejecutándose en puerto 3000 (Node.js v14)
+- ✅ **Migración completada**: Baileys → whatsapp-web.js
+- ✅ **Sistema funcional**: Recibe y envía mensajes WhatsApp
+- ✅ **Redis funcionando** en puerto 6379
+- ✅ **PostgreSQL configurado** en puerto 5432
+- ✅ **Backend ejecutándose** en puerto 8080 (Node.js v18+)
+- ✅ **Frontend ejecutándose** en puerto 3000 (Node.js v16+)
+- ✅ **Configurado para Colombia** con modelo manual
 
 ## Notas de Seguridad
 - Cambiar todas las contraseñas y secretos por defecto

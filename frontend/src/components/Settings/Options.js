@@ -7,16 +7,14 @@ import InputLabel from "@material-ui/core/InputLabel";
 import Select from "@material-ui/core/Select";
 import FormHelperText from "@material-ui/core/FormHelperText";
 import TextField from "@material-ui/core/TextField";
-import Title from "../Title";
-import Paper from "@material-ui/core/Paper";
-import Typography from "@material-ui/core/Typography";
 import useSettings from "../../hooks/useSettings";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { makeStyles } from "@material-ui/core/styles";
 import { grey, blue } from "@material-ui/core/colors";
 import { Tabs, Tab } from "@material-ui/core";
 import OnlyForSuperUser from '../../components/OnlyForSuperUser';
 import useAuth from '../../hooks/useAuth.js';
+import { i18n } from "../../translate/i18n";
 
 //import 'react-toastify/dist/ReactToastify.css';
  
@@ -85,7 +83,7 @@ export default function Options(props) {
 
   const [currentUser, setCurrentUser] = useState({});
   const { getCurrentUserInfo } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   useEffect(() => {
     async function findData() {
       setLoading(true);
@@ -101,9 +99,7 @@ export default function Options(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isSuper = () => {
-    return currentUser.super;
-  }; 
+ 
 
   const [userRating, setUserRating] = useState("disabled");
   const [scheduleType, setScheduleType] = useState("disabled");
@@ -115,7 +111,7 @@ export default function Options(props) {
   const [loadingScheduleType, setLoadingScheduleType] = useState(false);
   const [loadingCallType, setLoadingCallType] = useState(false);
   const [loadingChatbotType, setLoadingChatbotType] = useState(false);
-  const [loadingCheckMsgIsGroup, setCheckMsgIsGroup] = useState(false);
+  const [, setCheckMsgIsGroup] = useState(false);
 
 
   const [ipixcType, setIpIxcType] = useState("");
@@ -178,19 +174,15 @@ export default function Options(props) {
         setallowregister(allowregister.value);
       }
       
-	  {/*PLW DESIGN SAUDAÇÃO*/}
       const SendGreetingAccepted = settings.find((s) => s.key === "sendGreetingAccepted");
       if (SendGreetingAccepted) {
         setSendGreetingAccepted(SendGreetingAccepted.value);
       }	 
-	  {/*PLW DESIGN SAUDAÇÃO*/}	 
 	  
-	  {/*TRANSFERIR TICKET*/}	
-	  const SettingsTransfTicket = settings.find((s) => s.key === "sendMsgTransfTicket");
+      const SettingsTransfTicket = settings.find((s) => s.key === "sendMsgTransfTicket");
       if (SettingsTransfTicket) {
         setSettingsTransfTicket(SettingsTransfTicket.value);
       }
-	  {/*TRANSFERIR TICKET*/}
 
 
       const viewregister = settings.find((s) => s.key === 'viewregister');
@@ -253,7 +245,7 @@ export default function Options(props) {
       key: "userRating",
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setLoadingUserRating(false);
   }
 
@@ -264,7 +256,7 @@ export default function Options(props) {
       key: 'allowregister',
       value,
     });
-    toast.success('Operação atualizada com sucesso.');
+    toast.success(i18n.t("settings.success"));
     setLoadingallowregister(false);
   }
   
@@ -275,7 +267,7 @@ export default function Options(props) {
       key: "sendGreetingMessageOneQueues",
       value,
     });
-	toast.success("Operação atualizada com sucesso.");
+	toast.success(i18n.t("settings.success"));
     setLoadingSendGreetingMessageOneQueues(false);
   }
 
@@ -286,7 +278,7 @@ export default function Options(props) {
       key: 'viewregister',
       value,
     });
-    toast.success('Operação atualizada com sucesso.');
+    toast.success(i18n.t("settings.success"));
     setLoadingviewregister(false);
   }
   
@@ -297,7 +289,7 @@ export default function Options(props) {
       key: 'trial',
       value,
     });
-    toast.success('Operação atualizada com sucesso.');
+    toast.success(i18n.t("settings.success"));
     setLoadingtrial(false);
   }
 
@@ -310,7 +302,7 @@ export default function Options(props) {
       value,
     });
     //toast.success("Oraçãpeo atualizada com sucesso.");
-    toast.success('Operação atualizada com sucesso.', {
+    toast.success(i18n.t("settings.success"), {
       position: "top-right",
       autoClose: 2000,
       hideProgressBar: false,
@@ -332,7 +324,7 @@ export default function Options(props) {
       key: "call",
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setLoadingCallType(false);
   }
 
@@ -343,7 +335,7 @@ export default function Options(props) {
       key: "chatBotType",
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setLoadingChatbotType(false);
   }
 
@@ -354,7 +346,7 @@ export default function Options(props) {
       key: "CheckMsgIsGroup",
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setCheckMsgIsGroupType(false);
     /*     if (typeof scheduleTypeChanged === "function") {
           scheduleTypeChanged(value);
@@ -369,7 +361,7 @@ export default function Options(props) {
       key: "sendGreetingAccepted",
       value,
     });
-	toast.success("Operação atualizada com sucesso.");
+	toast.success(i18n.t("settings.success"));
     setLoadingSendGreetingAccepted(false);
   }  
   
@@ -384,7 +376,7 @@ export default function Options(props) {
       value,
     });
 
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setLoadingSettingsTransfTicket(false);
   } 
  
@@ -395,7 +387,7 @@ export default function Options(props) {
       key: "ipixc",
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setLoadingIpIxcType(false);
   }
 
@@ -406,7 +398,7 @@ export default function Options(props) {
       key: "tokenixc",
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setLoadingTokenIxcType(false);
   }
 
@@ -417,7 +409,7 @@ export default function Options(props) {
       key: "ipmkauth",
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setLoadingIpMkauthType(false);
   }
 
@@ -428,7 +420,7 @@ export default function Options(props) {
       key: "clientidmkauth",
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setLoadingClientIdMkauthType(false);
   }
 
@@ -439,7 +431,7 @@ export default function Options(props) {
       key: "clientsecretmkauth",
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setLoadingClientSecrectMkauthType(false);
   }
 
@@ -450,7 +442,7 @@ export default function Options(props) {
       key: "asaas",
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success(i18n.t("settings.success"));
     setLoadingAsaasType(false);
   }
   return (
@@ -486,7 +478,7 @@ export default function Options(props) {
                 handleScheduleType(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Desabilitado</MenuItem>
+              <MenuItem value={"disabled"}>{i18n.t("settings.disabled")}</MenuItem>
               <MenuItem value={"queue"}>Fila</MenuItem>
               <MenuItem value={"company"}>Empresa</MenuItem>
             </Select>
@@ -567,8 +559,8 @@ export default function Options(props) {
                 handleSendGreetingAccepted(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Desabilitado</MenuItem>
-              <MenuItem value={"enabled"}>Habilitado</MenuItem>
+              <MenuItem value={"disabled"}>{i18n.t("settings.disabled")}</MenuItem>
+              <MenuItem value={"enabled"}>{i18n.t("settings.enabled")}</MenuItem>
             </Select>
             <FormHelperText>
               {loadingSendGreetingAccepted && "Atualizando..."}
@@ -588,8 +580,8 @@ export default function Options(props) {
                 handleSettingsTransfTicket(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Desabilitado</MenuItem>
-              <MenuItem value={"enabled"}>Habilitado</MenuItem>
+              <MenuItem value={"disabled"}>{i18n.t("settings.disabled")}</MenuItem>
+              <MenuItem value={"enabled"}>{i18n.t("settings.enabled")}</MenuItem>
             </Select>
             <FormHelperText>
               {loadingSettingsTransfTicket && "Atualizando..."}
@@ -608,8 +600,8 @@ export default function Options(props) {
                 handleSendGreetingMessageOneQueues(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Desabilitado</MenuItem>
-              <MenuItem value={"enabled"}>Habilitado</MenuItem>
+              <MenuItem value={"disabled"}>{i18n.t("settings.disabled")}</MenuItem>
+              <MenuItem value={"enabled"}>{i18n.t("settings.enabled")}</MenuItem>
             </Select>
             <FormHelperText>
               {loadingSendGreetingMessageOneQueues && "Atualizando..."}
@@ -636,7 +628,7 @@ export default function Options(props) {
 						  marginTop: 20,
 						}}
 					  >
-						<Tab label='Configurações Globais' />
+						<Tab label={i18n.t("settings.globalSettings")} />
 					  </Tabs>
 					</Grid>
 

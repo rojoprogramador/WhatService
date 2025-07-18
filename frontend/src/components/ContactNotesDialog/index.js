@@ -58,7 +58,7 @@ export default function ContactNotesDialog ({ modalOpen, onClose, ticket }) {
 
     useEffect(() => {
         async function openAndFetchData () {
-            if (modalOpen) {
+            if (modalOpen && ticketId && contactId) {
                 setOpen(true)
                 handleResetState()
                 await loadNotes()
@@ -66,7 +66,7 @@ export default function ContactNotesDialog ({ modalOpen, onClose, ticket }) {
         }
         openAndFetchData()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [modalOpen])
+    }, [modalOpen, ticketId, contactId])
 
     const handleResetState = () => {
         setNewNote({ note: "" })

@@ -1,12 +1,11 @@
 import * as Sentry from "@sentry/node";
-import { WAMessage } from "@whiskeysockets/baileys";
+import { Message as WWebMessage } from 'whatsapp-web.js';
 import AppError from "../../errors/AppError";
 import GetTicketWbot from "../../helpers/GetTicketWbot";
 import Message from "../../models/Message";
 import Ticket from "../../models/Ticket";
-
 import formatBody from "../../helpers/Mustache";
-import { map_msg } from "../../utils/global";
+import { ExtendedMessage } from "../../libs/wwebjs-types";
 
 interface Request {
   body: string;
@@ -20,53 +19,92 @@ const SendWhatsAppMessage = async ({
   ticket,
   quotedMsg,
   isForwarded = false
-}: Request): Promise<WAMessage> => {
-  let options = {};
+}: Request): Promise<WWebMessage> => {
+  console.log('📤 SendWhatsAppMessage started:', {
+    ticketId: ticket.id,
+    contactNumber: ticket.contact.number,
+    isGroup: ticket.isGroup,
+    bodyLength: body?.length,
+    hasQuotedMsg: !!quotedMsg
+  });
+
   const wbot = await GetTicketWbot(ticket);
 
-
-  const number = `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"
-    }`;
-
-
-  if (quotedMsg) {
-    const chatMessages = await Message.findOne({
-      where: {
-        id: quotedMsg.id
-      }
-    });
-
-    if (chatMessages) {
-      const msgFound = JSON.parse(chatMessages.dataJson);
-
-      options = {
-        quoted: {
-          key: msgFound.key,
-          message: {
-            extendedTextMessage: msgFound.message.extendedTextMessage
-          }
-        }
-      };
-    }
-
-  }
+  // Formatear número de contacto para whatsapp-web.js
+  const chatId = `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "c.us"}`;
+  console.log('📤 Sending to chatId:', chatId);
 
   try {
-    const sentMessage = await wbot.sendMessage(number, {
-      text: formatBody(body, ticket.contact),
-      // text: body, //formatBody(body, ticket.contact),
-      contextInfo: { forwardingScore: isForwarded ? 2 : 0, isForwarded: isForwarded ? true : false }
-    },
-      {
-        ...options
-      }
-    );
+    // Obtener el chat
+    const chat = await wbot.getChatById(chatId);
+    console.log('📤 Chat obtained successfully');
+    
+    // Formatear el mensaje
+    const formattedBody = formatBody(body, ticket.contact);
+    console.log('📤 Message formatted:', formattedBody.substring(0, 100));
+    
+    let sentMessage: WWebMessage;
 
-    await ticket.update({ lastMessage: formatBody(body, ticket.contact) });
+    // Si hay mensaje citado, enviarlo con quote
+    if (quotedMsg) {
+      try {
+        const chatMessages = await Message.findOne({
+          where: { id: quotedMsg.id }
+        });
+
+        if (chatMessages) {
+          // Intentar encontrar el mensaje original en WhatsApp
+          const messages = await chat.fetchMessages({ limit: 100 });
+          const originalMessage = messages.find(msg => 
+            msg.id._serialized === (chatMessages as any).wid ||
+            msg.body === chatMessages.body
+          );
+
+          if (originalMessage) {
+            // Enviar con cita
+            sentMessage = await chat.sendMessage(formattedBody, {
+              quotedMessageId: originalMessage.id._serialized
+            });
+          } else {
+            // Si no encuentra el mensaje original, enviar normal
+            sentMessage = await chat.sendMessage(formattedBody);
+          }
+        } else {
+          sentMessage = await chat.sendMessage(formattedBody);
+        }
+      } catch (quoteError) {
+        // Si hay error con la cita, enviar mensaje normal
+        console.warn('Error sending quoted message, sending normal message:', quoteError);
+        sentMessage = await chat.sendMessage(formattedBody);
+      }
+    } else {
+      // Enviar mensaje normal
+      sentMessage = await chat.sendMessage(formattedBody);
+    }
+
+    // Marcar como reenviado si es necesario
+    if (isForwarded && sentMessage) {
+      // WhatsApp Web JS no tiene API directa para marcar como forwarded
+      // pero podemos agregar un indicador en el mensaje si es necesario
+      console.log('Message sent as forwarded:', sentMessage.id._serialized);
+    }
+
+    console.log('📤 Message sent successfully:', {
+      id: sentMessage.id._serialized,
+      type: sentMessage.type,
+      timestamp: sentMessage.timestamp,
+      fromMe: sentMessage.fromMe,
+      bodyPreview: sentMessage.body?.substring(0, 50)
+    });
+
+    // Actualizar último mensaje del ticket
+    await ticket.update({ lastMessage: formattedBody });
+    
     return sentMessage;
+
   } catch (err) {
     Sentry.captureException(err);
-    console.log(err);
+    console.error('Error sending WhatsApp message:', err);
     throw new AppError("ERR_SENDING_WAPP_MSG");
   }
 };

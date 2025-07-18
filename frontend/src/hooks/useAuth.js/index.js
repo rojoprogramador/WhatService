@@ -35,16 +35,32 @@ const useAuth = () => {
     },
     async (error) => {
       const originalRequest = error.config;
+      
+      // Evitar bucle en /auth/me y /auth/refresh_token
+      if (originalRequest.url?.includes('/auth/me') || originalRequest.url?.includes('/auth/refresh_token')) {
+        return Promise.reject(error);
+      }
+      
       if (error?.response?.status === 403 && !originalRequest._retry) {
         originalRequest._retry = true;
 
-        const { data } = await api.post("/auth/refresh_token");
-        if (data) {
-          localStorage.setItem("token", JSON.stringify(data.token));
-          api.defaults.headers.Authorization = `Bearer ${data.token}`;
+        try {
+          const { data } = await api.post("/auth/refresh_token");
+          if (data) {
+            localStorage.setItem("token", JSON.stringify(data.token));
+            api.defaults.headers.Authorization = `Bearer ${data.token}`;
+            return api(originalRequest);
+          }
+        } catch (refreshError) {
+          // Si el refresh falla, limpiar estado y no reintentar
+          localStorage.removeItem("token");
+          localStorage.removeItem("companyId");
+          api.defaults.headers.Authorization = undefined;
+          setIsAuth(false);
+          return Promise.reject(refreshError);
         }
-        return api(originalRequest);
       }
+      
       if (error?.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("companyId");
@@ -62,12 +78,20 @@ const useAuth = () => {
     (async () => {
       if (token) {
         try {
-          const { data } = await api.post("/auth/refresh_token");
-          api.defaults.headers.Authorization = `Bearer ${data.token}`;
+          // Primero intentar una llamada simple para verificar si el token es válido
+          api.defaults.headers.Authorization = `Bearer ${JSON.parse(token)}`;
+          const { data } = await api.get("/auth/me"); // Endpoint simple para verificar auth
           setIsAuth(true);
-          setUser(data.user);
+          setUser(data);
         } catch (err) {
-          toastError(err);
+          console.log("Token inválido, limpiando estado:", err.response?.status);
+          // Si el token es inválido, limpiar todo el estado
+          localStorage.removeItem("token");
+          localStorage.removeItem("companyId");
+          api.defaults.headers.Authorization = undefined;
+          setIsAuth(false);
+          setUser({});
+          // NO mostrar error en este caso, es normal que el token expire
         }
       }
       setLoading(false);

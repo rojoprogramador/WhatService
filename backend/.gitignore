@@ -15,3 +15,7 @@ yarn-error.log
 # Ignore test-related files
 /coverage.data
 /coverage/
+
+# WhatsApp Web JS session data
+.wwebjs_auth/
+.wwebjs_cache/

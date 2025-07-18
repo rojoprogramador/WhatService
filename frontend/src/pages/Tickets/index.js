@@ -55,10 +55,10 @@ const Chat = () => {
 		<div className={classes.chatContainer}>
 			<div className={classes.chatPapper}>
 				<Grid container spacing={0}>
-					<Grid item xs={4} className={classes.contactsWrapper}>
+					<Grid item xs={12} sm={4} md={4} className={classes.contactsWrapper}>
 						<TicketsManager />
 					</Grid>
-					<Grid item xs={8} className={classes.messagessWrapper}>
+					<Grid item xs={12} sm={8} md={8} className={classes.messagessWrapper}>
 						{ticketId ? (
 							<>
 								<Ticket />
