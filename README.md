@@ -398,3 +398,22 @@ El frontend está desarrollado en React y utiliza Material-UI como biblioteca de
 - Generar nuevas claves JWT
 - Modificar las credenciales del administrador después del primer inicio de sesión
 - Configurar correctamente los permisos de la base de datos
+
+## 📚 Documentación
+
+La documentación completa del proyecto está organizada en el directorio `docs/`:
+
+- **[📖 Índice de Documentación](docs/README.md)** - Punto de acceso principal
+- **[🚀 Configuración](docs/setup/)** - Guías de configuración inicial
+- **[🔄 Migración](docs/migration/)** - Guías de migración
+- **[🚢 Despliegue](docs/deployment/)** - Documentación de despliegue
+- **[🔧 Fixes](docs/fixes/)** - Correcciones y soluciones
+- **[🧪 Testing](docs/testing/)** - Reportes de testing
+
+### Documentación Principal
+- **[CLAUDE.md](CLAUDE.md)** - Guía completa para Claude Code
+- **[README.md](README.md)** - Este archivo
+
+---
+
+**Última actualización de documentación**: 6 de Julio de 2025
