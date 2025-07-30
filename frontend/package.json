@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "versionSystem": "10.9.0",
-  "nomeEmpresa": "Whaticket Saas",
+  "nomeEmpresa": "KliensVox Saas",
   "private": true,
   "dependencies": {
     "@date-io/date-fns": "^2.14.0",

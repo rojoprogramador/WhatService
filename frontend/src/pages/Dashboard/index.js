@@ -42,6 +42,7 @@ import TableAttendantsStatus from "../../components/Dashboard/TableAttendantsSta
 import { isArray } from "lodash";
 
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { i18n } from "../../translate/i18n";
 
 import useDashboard from "../../hooks/useDashboard";
 import useTickets from "../../hooks/useTickets";
@@ -131,7 +132,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
       card00: {
@@ -140,7 +141,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card1: {
@@ -149,7 +150,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card2: {
@@ -158,7 +159,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card3: {
@@ -167,7 +168,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card4: {
@@ -176,7 +177,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card5: {
@@ -185,7 +186,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card6: {
@@ -194,7 +195,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card7: {
@@ -203,7 +204,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card8: {
@@ -212,7 +213,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   card9: {
@@ -221,7 +222,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
     height: "100%",
-    backgroundColor: "#2f0549",
+    backgroundColor: "#1abc9c",
     color: "#eee",
   },
   fixedHeightPaper2: {
@@ -309,7 +310,7 @@ const Dashboard = () => {
     }
 
     if (Object.keys(params).length === 0) {
-      toast.error("Parametrize o filtro");
+      toast.error(i18n.t("dashboard.filters.parameterizeFilter"));
       setLoading(false);
       return;
     }
@@ -360,7 +361,7 @@ const Dashboard = () => {
         <>
           <Grid item xs={12} sm={6} md={4}>
             <TextField
-              label="Data Inicial"
+              label={i18n.t("dashboard.filters.initialDate")}
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
@@ -372,7 +373,7 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
             <TextField
-              label="Data Final"
+              label={i18n.t("dashboard.filters.finalDate")}
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
@@ -388,22 +389,22 @@ const Dashboard = () => {
       return (
         <Grid item xs={12} sm={6} md={4}>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="period-selector-label">Período</InputLabel>
+            <InputLabel id="period-selector-label">{i18n.t("dashboard.filters.period")}</InputLabel>
             <Select
               labelId="period-selector-label"
               id="period-selector"
               value={period}
               onChange={(e) => handleChangePeriod(e.target.value)}
             >
-              <MenuItem value={0}>Nenhum selecionado</MenuItem>
-              <MenuItem value={3}>Últimos 3 dias</MenuItem>
-              <MenuItem value={7}>Últimos 7 dias</MenuItem>
-              <MenuItem value={15}>Últimos 15 dias</MenuItem>
-              <MenuItem value={30}>Últimos 30 dias</MenuItem>
-              <MenuItem value={60}>Últimos 60 dias</MenuItem>
-              <MenuItem value={90}>Últimos 90 dias</MenuItem>
+              <MenuItem value={0}>{i18n.t("dashboard.filters.noneSelected")}</MenuItem>
+              <MenuItem value={3}>{i18n.t("dashboard.filters.last3Days")}</MenuItem>
+              <MenuItem value={7}>{i18n.t("dashboard.filters.last7Days")}</MenuItem>
+              <MenuItem value={15}>{i18n.t("dashboard.filters.last15Days")}</MenuItem>
+              <MenuItem value={30}>{i18n.t("dashboard.filters.last30Days")}</MenuItem>
+              <MenuItem value={60}>{i18n.t("dashboard.filters.last60Days")}</MenuItem>
+              <MenuItem value={90}>{i18n.t("dashboard.filters.last90Days")}</MenuItem>
             </Select>
-            <FormHelperText>Selecione o período desejado</FormHelperText>
+            <FormHelperText>{i18n.t("dashboard.filters.selectPeriod")}</FormHelperText>
           </FormControl>
         </Grid>
       );
@@ -418,16 +419,16 @@ const Dashboard = () => {
 				  {/* FILTROS */}
           <Grid item xs={12} sm={6} md={4}>
             <FormControl className={classes.selectContainer}>
-              <InputLabel id="period-selector-label">Tipo de Filtro</InputLabel>
+              <InputLabel id="period-selector-label">{i18n.t("dashboard.filters.filterType")}</InputLabel>
               <Select
                 labelId="period-selector-label"
                 value={filterType}
                 onChange={(e) => handleChangeFilterType(e.target.value)}
               >
-                <MenuItem value={1}>Filtro por Data</MenuItem>
-                <MenuItem value={2}>Filtro por Período</MenuItem>
+                <MenuItem value={1}>{i18n.t("dashboard.filters.dateFilter")}</MenuItem>
+                <MenuItem value={2}>{i18n.t("dashboard.filters.periodFilter")}</MenuItem>
               </Select>
-              <FormHelperText>Selecione o período desejado</FormHelperText>
+              <FormHelperText>{i18n.t("dashboard.filters.selectPeriod")}</FormHelperText>
             </FormControl>
           </Grid>
 
@@ -441,7 +442,7 @@ const Dashboard = () => {
               variant="contained"
               color="primary"
             >
-              Filtrar
+              {i18n.t("dashboard.filters.filter")}
             </ButtonWithSpinner>
           </Grid>
 		
@@ -460,7 +461,7 @@ const Dashboard = () => {
                     variant="h6"
                     paragraph
                   >
-                    Conexões Ativas
+                    {i18n.t("dashboard.cards.activeConnections")}
                   </Typography>
                   <Grid item>
                     <Typography
@@ -500,7 +501,7 @@ const Dashboard = () => {
                     variant="h6"
                     paragraph
                   >
-                    Empresas
+                    {i18n.t("dashboard.cards.companies")}
                   </Typography>
                   <Grid item>
                     <Typography
@@ -524,7 +525,6 @@ const Dashboard = () => {
           </Grid>
 		  )}
 
-          {/* EM ATENDIMENTO */}
           <Grid item xs={12} sm={6} md={4}>
             <Paper
               className={classes.card1}
@@ -538,7 +538,7 @@ const Dashboard = () => {
                     variant="h6"
                     paragraph
                   >
-                    Em Conversa
+                    {i18n.t("dashboard.cards.inConversation")}
                   </Typography>
                   <Grid item>
                     <Typography
@@ -575,7 +575,7 @@ const Dashboard = () => {
                     variant="h6"
                     paragraph
                   >
-                    Aguardando
+                    {i18n.t("dashboard.cards.waiting")}
                   </Typography>
                   <Grid item>
                     <Typography
@@ -640,7 +640,6 @@ const Dashboard = () => {
             </Paper>
 </Grid>*/}
 
-          {/* FINALIZADOS */}
           <Grid item xs={12} sm={6} md={4}>
             <Paper
               className={classes.card3}
@@ -654,7 +653,7 @@ const Dashboard = () => {
                     variant="h6"
                     paragraph
                   >
-                    Finalizados
+                    {i18n.t("dashboard.cards.finished")}
                   </Typography>
                   <Grid item>
                     <Typography
@@ -691,7 +690,7 @@ const Dashboard = () => {
                     variant="h6"
                     paragraph
                   >
-                    Novos Contatos
+                    {i18n.t("dashboard.cards.newContacts")}
                   </Typography>
                   <Grid item>
                     <Typography
@@ -729,7 +728,7 @@ const Dashboard = () => {
                     variant="h6"
                     paragraph
                   >
-                    T.M. de Conversa
+                    {i18n.t("dashboard.cards.avgConversationTime")}
                   </Typography>
                   <Grid item>
                     <Typography
@@ -766,7 +765,7 @@ const Dashboard = () => {
                     variant="h6"
                     paragraph
                   >
-                    T.M. de Espera
+                    {i18n.t("dashboard.cards.avgWaitTime")}
                   </Typography>
                   <Grid item>
                     <Typography

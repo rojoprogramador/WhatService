@@ -274,7 +274,14 @@ const MessageInput = ({ ticketStatus }) => {
 			setRecording(true);
 			setLoading(false);
 		} catch (err) {
-			toastError(err);
+			console.error("Audio recording error:", err);
+			if (err.name === 'NotAllowedError') {
+				toastError("Permiso denegado para acceder al micrófono. Por favor, permite el acceso en la configuración de tu navegador.");
+			} else if (err.name === 'NotFoundError') {
+				toastError("No se encontró ningún micrófono. Verifica que tengas uno conectado.");
+			} else {
+				toastError(err);
+			}
 			setLoading(false);
 		}
 	};
@@ -290,14 +297,21 @@ const MessageInput = ({ ticketStatus }) => {
 			}
 
 			const formData = new FormData();
-			const filename = `${new Date().getTime()}.mp3`;
+			const filename = `audio-record-site-${new Date().getTime()}.mp3`;
 			formData.append("medias", blob, filename);
 			formData.append("body", filename);
 			formData.append("fromMe", true);
 
 			await api.post(`/messages/${ticketId}`, formData);
 		} catch (err) {
-			toastError(err);
+			console.error("Audio upload error:", err);
+			if (err.response?.status === 413) {
+				toastError("El archivo de audio es demasiado grande. Intenta grabar un mensaje más corto.");
+			} else if (err.response?.status === 400) {
+				toastError("Error al procesar el audio. Verifica que el micrófono funcione correctamente.");
+			} else {
+				toastError("Error al enviar el audio. Inténtalo nuevamente.");
+			}
 		}
 
 		setRecording(false);

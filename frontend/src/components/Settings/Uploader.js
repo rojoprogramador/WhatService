@@ -57,7 +57,7 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: 4,
     width: "100%",
     "& .MuiTab-wrapper": {
-      color: "#128c7e"
+      color: "#007bff"
     },
     "& .MuiTabs-flexContainer": {
       justifyContent: "center"
@@ -134,17 +134,14 @@ const Uploader = () => {
 
   // trava para nao acessar pagina que não pode 
   useEffect(() => {
-    async function fetchData() {
-      if (!user.super) {
-        toast.error("Sem permissão para acessar!");
-        setTimeout(() => {
-          history.push(`/`)
-        }, 500);
-      }
+    if (!user.super) {
+      toast.error(i18n.t("backendErrors.ERR_NO_PERMISSION"));
+      setTimeout(() => {
+        history.push(`/`)
+      }, 500);
     }
-    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user.super]);
 
 
 const handleFileChange = (event) => {
@@ -157,7 +154,7 @@ const handleFileChange = (event) => {
   } else {
     setFile(null);
     setSelectedFileName(null);
-    toast.error("Use somente arquivos em formato PNG, ICO ou SVG!");
+    toast.error("Use somente arquivos en formato PNG, ICO o SVG!");
   }
 };
 
@@ -169,12 +166,12 @@ const handleFileChange = (event) => {
     event.preventDefault();
 
     if (!file) {
-      toast.warn("Escolha um arquivo!");
+      toast.warn("Seleccione un archivo!");
       return;
     }
 
     if (!selectedOption) {
-      toast.warn("Escolha um destino!");
+      toast.warn("Seleccione un destino!");
       return;
     }
 
@@ -185,7 +182,7 @@ const handleFileChange = (event) => {
 
       if (response.data.mensagem === 'Arquivo Anexado') {
         setUploaded(true);
-        toast.success("Arquivo enviado com sucesso!");
+        toast.success("Archivo enviado con éxito!");
         window.location.reload();
 
       }
@@ -208,22 +205,22 @@ return (
           marginTop: 20
         }}
       >
-        <Tab label="Logotipos / Ícones" />
+        <Tab label="Logotipos / Iconos" />
       </Tabs>
 
       <form onSubmit={handleSubmit} className={classes.fullWidth}>
       
       	<Grid item xs={12} sm={12} md={12} style={{ display: 'flex' }}>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="selectOption-label">Escolha uma opção:</InputLabel>
+            <InputLabel id="selectOption-label">Seleccione una opción:</InputLabel>
             <Select
               labelId="selectOption-label"
               value={selectedOption}
               onChange={handleOptionChange}
               style={{ marginTop: 15, marginBottom: 15}}
             >
-              <MenuItem value="signup">Tela de Registro</MenuItem>
-              <MenuItem value="login">Tela de Login</MenuItem>
+              <MenuItem value="signup">Pantalla de Registro</MenuItem>
+              <MenuItem value="login">Pantalla de Login</MenuItem>
               <MenuItem value="interno">Logotipo Interno</MenuItem>
 			  <MenuItem value="favicon">Favicon.Ico</MenuItem>
               <MenuItem value="favicon-256x256">Ícone 256x256</MenuItem>
@@ -242,7 +239,7 @@ return (
         			className={classes.fileInput}
                     style={{ marginTop: 15, marginBottom: 15 }}
       			/>
-      			{selectedFileName ? selectedFileName : 'Escolher imagem em PNG'}
+      			{selectedFileName ? selectedFileName : 'Seleccionar imagen en PNG'}
     			</label>
   			</FormControl>
 		</Grid>
@@ -255,7 +252,7 @@ return (
             variant="contained"
             color="primary"
           >
-            ENVIAR ARQUIVO
+            ENVIAR ARCHIVO
           </ButtonWithSpinner>
         </Grid>
       </form>

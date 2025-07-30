@@ -203,15 +203,15 @@ const Campaigns = () => {
   const formatStatus = (val) => {
     switch (val) {
       case "INATIVA":
-        return "Inativa";
+        return i18n.t("campaigns.status.inactive");
       case "PROGRAMADA":
-        return "Programada";
+        return i18n.t("campaigns.status.scheduled");
       case "EM_ANDAMENTO":
-        return "Em Andamento";
+        return i18n.t("campaigns.status.inProgress");
       case "CANCELADA":
-        return "Cancelada";
+        return i18n.t("campaigns.status.cancelled");
       case "FINALIZADA":
-        return "Finalizada";
+        return i18n.t("campaigns.status.finished");
       default:
         return val;
     }
@@ -346,22 +346,22 @@ const Campaigns = () => {
                   <TableCell align="center">
                     {campaign.contactListId
                       ? campaign.contactList.name
-                      : "Não definida"}
+                      : i18n.t("campaigns.status.notDefined")}
                   </TableCell>
                   <TableCell align="center">
                     {campaign.whatsappId
                       ? campaign.whatsapp.name
-                      : "Não definido"}
+                      : i18n.t("campaigns.status.notDefined")}
                   </TableCell>
                   <TableCell align="center">
                     {campaign.scheduledAt
                       ? datetimeToClient(campaign.scheduledAt)
-                      : "Sem agendamento"}
+                      : i18n.t("campaigns.status.noSchedule")}
                   </TableCell>
                   <TableCell align="center">
                     {campaign.completedAt
                       ? datetimeToClient(campaign.completedAt)
-                      : "Não concluída"}
+                      : i18n.t("campaigns.status.notCompleted")}
                   </TableCell>
                   {/* <TableCell align="center">
                     {campaign.confirmation ? "Habilitada" : "Desabilitada"}
@@ -370,7 +370,7 @@ const Campaigns = () => {
                     {campaign.status === "EM_ANDAMENTO" && (
                       <IconButton
                         onClick={() => cancelCampaign(campaign)}
-                        title="Parar Campanha"
+                        title={i18n.t("campaigns.actions.stop")}
                         size="small"
                       >
                         <PauseCircleOutlineIcon />
@@ -379,7 +379,7 @@ const Campaigns = () => {
                     {campaign.status === "CANCELADA" && (
                       <IconButton
                         onClick={() => restartCampaign(campaign)}
-                        title="Parar Campanha"
+                        title={i18n.t("campaigns.actions.restart")}
                         size="small"
                       >
                         <PlayCircleOutlineIcon />

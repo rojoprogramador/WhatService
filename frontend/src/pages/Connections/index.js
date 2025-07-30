@@ -3,7 +3,6 @@ import { toast } from "react-toastify";
 import { format, parseISO } from "date-fns";
 
 import { makeStyles } from "@material-ui/core/styles";
-import { green } from "@material-ui/core/colors";
 import {
 	Button,
 	TableBody,
@@ -67,7 +66,7 @@ const useStyles = makeStyles(theme => ({
 		textAlign: "center",
 	},
 	buttonProgress: {
-		color: green[500],
+		color: theme.palette.mode === "light" ? "#1abc9c" : "#007bff",
 	},
 }));
 
@@ -119,7 +118,7 @@ const Connections = () => {
     // const companyId = localStorage.getItem("companyId");
     try {
       await api.post(`/whatsapp-restart/`);
-      toast.warn(i18n.t("Aguarde... reiniciando..."));
+      toast.warn(i18n.t("connections.messages.restarting"));
     } catch (err) {
       toastError(err);
     }
@@ -288,7 +287,7 @@ const Connections = () => {
 				)}
 				{whatsApp.status === "CONNECTED" && (
 					<CustomToolTip title={i18n.t("connections.toolTips.connected.title")}>
-						<SignalCellular4Bar style={{ color: green[500] }} />
+						<SignalCellular4Bar style={{ color: "#1abc9c" }} />
 					</CustomToolTip>
 				)}
 				{(whatsApp.status === "TIMEOUT" || whatsApp.status === "PAIRING") && (
@@ -343,7 +342,7 @@ const Connections = () => {
             					color="primary"
             					onClick={restartWhatsapps}
           					>
-            					{i18n.t("REINICIAR CONEXÕES")}
+            					{i18n.t("connections.buttons.restartConnections")}
           					</Button>
 							</>
 						)}
@@ -427,7 +426,7 @@ const Connections = () => {
 											<TableCell align="center">
 												{whatsApp.isDefault && (
 													<div className={classes.customTableCell}>
-														<CheckCircle style={{ color: green[500] }} />
+														<CheckCircle style={{ color: "#1abc9c" }} />
 													</div>
 												)}
 											</TableCell>

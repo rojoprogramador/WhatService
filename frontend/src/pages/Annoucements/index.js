@@ -113,7 +113,7 @@ const Announcements = () => {
   useEffect(() => {
     async function fetchData() {
       if (!user.super) {
-        toast.error("Esta empresa não possui permissão para acessar essa página! Estamos lhe redirecionando.");
+        toast.error(i18n.t("announcements.permissions.noAccess"));
         setTimeout(() => {
           history.push(`/`)
         }, 1000);
@@ -216,13 +216,13 @@ const Announcements = () => {
 
   const translatePriority = (val) => {
     if (val === 1) {
-      return "Alta";
+      return i18n.t("announcements.priority.high");
     }
     if (val === 2) {
-      return "Média";
+      return i18n.t("announcements.priority.medium");
     }
     if (val === 3) {
-      return "Baixa";
+      return i18n.t("announcements.priority.low");
     }
   };
 

@@ -21,29 +21,56 @@ const publicFolder = path.resolve(__dirname, "..", "..", "..", "public");
 
 const processAudio = async (audio: string): Promise<string> => {
   const outputAudio = `${publicFolder}/${new Date().getTime()}.mp3`;
+  // Usar configuración específica para WhatsApp Web - MP3 con parámetros optimizados
+  const command = `"${ffmpegPath.path}" -i "${audio}" -vn -acodec libmp3lame -ar 16000 -ac 1 -ab 32k -f mp3 "${outputAudio}" -y`;
+  
+  console.log("🎵 Processing audio command:", command);
+  
   return new Promise((resolve, reject) => {
-    exec(
-      `${ffmpegPath.path} -i ${audio} -vn -ab 128k -ar 44100 -f ipod ${outputAudio} -y`,
-      (error, _stdout, _stderr) => {
-        if (error) reject(error);
+    exec(command, (error, _stdout, _stderr) => {
+      if (error) {
+        console.error("❌ FFmpeg error:", error.message);
+        console.error("❌ FFmpeg stderr:", _stderr);
+        reject(error);
+        return;
+      }
+      
+      try {
         fs.unlinkSync(audio);
+        console.log("✅ Audio processed successfully (MP3 for WhatsApp):", outputAudio);
+        resolve(outputAudio);
+      } catch (unlinkError) {
+        console.warn("⚠️ Could not delete temp file:", audio);
         resolve(outputAudio);
       }
-    );
+    });
   });
 };
 
 const processAudioFile = async (audio: string): Promise<string> => {
   const outputAudio = `${publicFolder}/${new Date().getTime()}.mp3`;
+  const command = `"${ffmpegPath.path}" -i "${audio}" -vn -acodec libmp3lame -ar 44100 -ac 1 -ab 128k "${outputAudio}" -y`;
+  
+  console.log("🎵 Processing audio file command:", command);
+  
   return new Promise((resolve, reject) => {
-    exec(
-      `${ffmpegPath.path} -i ${audio} -vn -ar 44100 -ac 2 -b:a 192k ${outputAudio}`,
-      (error, _stdout, _stderr) => {
-        if (error) reject(error);
+    exec(command, (error, _stdout, _stderr) => {
+      if (error) {
+        console.error("❌ FFmpeg error:", error.message);
+        console.error("❌ FFmpeg stderr:", _stderr);
+        reject(error);
+        return;
+      }
+      
+      try {
         fs.unlinkSync(audio);
+        console.log("✅ Audio file processed successfully:", outputAudio);
+        resolve(outputAudio);
+      } catch (unlinkError) {
+        console.warn("⚠️ Could not delete temp file:", audio);
         resolve(outputAudio);
       }
-    );
+    });
   });
 };
 
@@ -78,6 +105,14 @@ const SendWhatsAppMedia = async ({
   isForwarded = false
 }: Request): Promise<WWebMessage> => {
   try {
+    console.log("🎬 SendWhatsAppMedia called with:", {
+      filename: media.originalname,
+      mimetype: media.mimetype,
+      size: media.size,
+      ticketId: ticket.id,
+      contactNumber: ticket.contact?.number
+    });
+    
     const wbot = await GetTicketWbot(ticket);
 
     // Formatear número de contacto para whatsapp-web.js
@@ -96,11 +131,33 @@ const SendWhatsAppMedia = async ({
     if (typeMessage === "audio") {
       const isVoiceMessage = media.originalname.includes("audio-record-site");
       
+      console.log("🎤 Processing audio file:", {
+        isVoiceMessage,
+        filename: media.originalname,
+        mimetype: media.mimetype,
+        size: media.size,
+        path: media.path
+      });
+      
+      // Validar que el archivo existe
+      if (!fs.existsSync(pathMedia)) {
+        throw new Error(`Audio file not found: ${pathMedia}`);
+      }
+      
       if (isVoiceMessage) {
         // Procesar audio para mensaje de voz
         const convertedAudio = await processAudio(media.path);
         messageMedia = MessageMedia.fromFilePath(convertedAudio);
-        messageMedia.filename = media.originalname;
+        
+        // Para mensajes de voz, WhatsApp Web requiere configuración específica
+        messageMedia.filename = null; // WhatsApp Web no acepta filename para voice messages
+        messageMedia.mimetype = "audio/mpeg"; // Forzar MIME type correcto para MP3
+        
+        console.log("🎤 Sending voice message with media:", {
+          mimetype: messageMedia.mimetype,
+          hasData: !!messageMedia.data,
+          filename: messageMedia.filename
+        });
         
         // Enviar como mensaje de voz (PTT)
         sentMessage = await chat.sendMessage(messageMedia, {
@@ -158,7 +215,24 @@ const SendWhatsAppMedia = async ({
     return sentMessage;
   } catch (err) {
     Sentry.captureException(err);
-    console.error('Error sending WhatsApp media:', err);
+    console.error('❌ Error sending WhatsApp media:', {
+      message: err.message,
+      stack: err.stack,
+      filename: media?.originalname,
+      mimetype: media?.mimetype,
+      ticketId: ticket?.id
+    });
+    
+    // Limpiar archivos temporales en caso de error
+    try {
+      if (media?.path && fs.existsSync(media.path)) {
+        fs.unlinkSync(media.path);
+        console.log("🧹 Cleaned up temporary file after error:", media.path);
+      }
+    } catch (cleanupErr) {
+      console.warn("⚠️ Could not cleanup temp file:", cleanupErr.message);
+    }
+    
     throw new AppError("ERR_SENDING_WAPP_MSG");
   }
 };

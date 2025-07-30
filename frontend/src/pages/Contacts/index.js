@@ -338,9 +338,9 @@ function getDateLastMessage(contact) {
             {i18n.t("contacts.buttons.add")}
           </Button>
 
-         <CSVLink style={{ textDecoration:'none'}} separator=";" filename={'whaticket.csv'} data={contacts.map((contact) => ({ name: contact.name, number: contact.number, email: contact.email }))}>
+         <CSVLink style={{ textDecoration:'none'}} separator=";" filename={'kliensvox.csv'} data={contacts.map((contact) => ({ name: contact.name, number: contact.number, email: contact.email }))}>
           <Button	variant="contained" color="primary"> 
-          EXPORTAR CONTATOS 
+          {i18n.t("contacts.buttons.export")}
           </Button>
           </CSVLink>		  
 
@@ -376,9 +376,9 @@ function getDateLastMessage(contact) {
                 {i18n.t("contacts.table.email")}
               </TableCell>
               <TableCell align="center">
-              {"Última Interação"}
+              {i18n.t("contacts.table.lastInteraction")}
               </TableCell>
-			  <TableCell align="center">{"Status"}</TableCell>
+			  <TableCell align="center">{i18n.t("contacts.table.status")}</TableCell>
               <TableCell align="center">
                 {i18n.t("contacts.table.actions")}
               </TableCell>

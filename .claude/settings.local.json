@@ -11,7 +11,10 @@
       "Bash(cd:*)",
       "Bash(cd:*)",
       "Bash(cd:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(sed:*)",
+      "Bash(npm start)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }

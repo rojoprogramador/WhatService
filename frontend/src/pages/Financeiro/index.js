@@ -162,12 +162,12 @@ const Invoices = () => {
     var dias = moment.duration(diff).asDays();    
     const status = record.status;
     if (status === "paid") {
-      return "Pago";
+      return i18n.t("financeiro.statusPaid");
     }
     if (dias < 0) {
-      return "Vencido";
+      return i18n.t("financeiro.statusOverdue");
     } else {
-      return "Em Aberto"
+      return i18n.t("financeiro.statusOpen")
     }
 
   }
@@ -183,7 +183,7 @@ const Invoices = () => {
 
       ></SubscriptionModal>
       <MainHeader>
-        <Title>Faturas</Title>
+        <Title>{i18n.t("financeiro.title")}</Title>
       </MainHeader>
       <Paper
         className={classes.mainPaper}
@@ -193,12 +193,12 @@ const Invoices = () => {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell align="center">Id</TableCell>
-              <TableCell align="center">Detalhes</TableCell>
-              <TableCell align="center">Valor</TableCell>
-              <TableCell align="center">Data Venc.</TableCell>
-              <TableCell align="center">Status</TableCell>
-              <TableCell align="center">Ação</TableCell>
+              <TableCell align="center">{i18n.t("financeiro.id")}</TableCell>
+              <TableCell align="center">{i18n.t("financeiro.details")}</TableCell>
+              <TableCell align="center">{i18n.t("financeiro.value")}</TableCell>
+              <TableCell align="center">{i18n.t("financeiro.dueDate")}</TableCell>
+              <TableCell align="center">{i18n.t("financeiro.status")}</TableCell>
+              <TableCell align="center">{i18n.t("financeiro.action")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -211,14 +211,14 @@ const Invoices = () => {
                   <TableCell align="center">{moment(invoices.dueDate).format("DD/MM/YYYY")}</TableCell>
                   <TableCell style={{ fontWeight: 'bold' }} align="center">{rowStatus(invoices)}</TableCell>
                   <TableCell align="center">
-                    {rowStatus(invoices) !== "Pago" ?
+                    {rowStatus(invoices) !== i18n.t("financeiro.statusPaid") ?
                       <Button
                         size="small"
                         variant="outlined"
                         color="secondary"
                         onClick={() => handleOpenContactModal(invoices)}
                       >
-                        PAGAR
+                        {i18n.t("financeiro.payButton")}
                       </Button> :
                       <Button
                         size="small"
@@ -226,7 +226,7 @@ const Invoices = () => {
                         /* color="secondary"
                         disabled */
                       >
-                        PAGO 
+                        {i18n.t("financeiro.paidButton")}
                       </Button>}
 
                   </TableCell>

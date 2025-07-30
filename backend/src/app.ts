@@ -14,6 +14,8 @@ import AppError from "./errors/AppError";
 import { messageQueue, sendScheduledMessages } from "./queues";
 import routes from "./routes";
 import { logger } from "./utils/logger";
+import i18nMiddleware, { LocalizedRequest } from "./middleware/i18nMiddleware";
+import { t } from "./utils/i18n";
 
 Sentry.init({ dsn: process.env.SENTRY_DSN });
 
@@ -35,6 +37,7 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
+app.use(i18nMiddleware);
 app.use(Sentry.Handlers.requestHandler());
 app.use("/public", express.static(uploadConfig.directory));
 
@@ -52,14 +55,19 @@ app.get("*", (req, res) => {
 
 app.use(Sentry.Handlers.errorHandler());
 
-app.use(async (err: Error, req: Request, res: Response, _: NextFunction) => {
+app.use(async (err: Error, req: LocalizedRequest, res: Response, _: NextFunction) => {
   if (err instanceof AppError) {
     logger.warn(err);
-    return res.status(err.statusCode).json({ error: err.message });
+    // Intentar traducir el mensaje de error si es una clave conocida
+    const language = req.language || 'es';
+    const translatedMessage = t(err.message, language as 'es' | 'en' | 'pt') || err.message;
+    return res.status(err.statusCode).json({ error: translatedMessage });
   }
 
   logger.error(err);
-  return res.status(500).json({ error: "Internal server error" });
+  const language = req.language || 'es';
+  const unknownErrorMessage = t('ERR_UNKNOWN_ERROR', language as 'es' | 'en' | 'pt');
+  return res.status(500).json({ error: unknownErrorMessage });
 });
 
 export default app;

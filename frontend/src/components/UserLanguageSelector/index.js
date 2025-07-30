@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 
 import { Button, Menu, MenuItem } from "@material-ui/core";
 import TranslateIcon from "@material-ui/icons/Translate";
@@ -11,8 +11,21 @@ import api from "../../services/api";
 
 const UserLanguageSelector = () => {
     const [langueMenuAnchorEl, setLangueMenuAnchorEl] = useState(null);
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
 
     const { user } = useContext(AuthContext);
+
+    useEffect(() => {
+        const updateLanguage = () => {
+            setCurrentLanguage(i18n.language);
+        };
+
+        i18n.on('languageChanged', updateLanguage);
+
+        return () => {
+            i18n.off('languageChanged', updateLanguage);
+        };
+    }, []);
 
     const handleOpenLanguageMenu = e => {
         setLangueMenuAnchorEl(e.currentTarget);
@@ -25,6 +38,7 @@ const UserLanguageSelector = () => {
     const handleChangeLanguage = async language => {
         try {
             await i18n.changeLanguage(language);
+            setCurrentLanguage(language);
             await api.put(`/users/${user.id}`, { language });
         } catch (err) {
             toastError(err);
@@ -41,9 +55,7 @@ const UserLanguageSelector = () => {
                 startIcon={<TranslateIcon />}
                 endIcon={<ExpandMoreIcon />}
             >
-                {user.language
-                    ? i18n.t(`languages.${user.language}`)
-                    : i18n.t(`languages.${user.undefined}`)}
+                {i18n.t(`languages.${currentLanguage}`)}
             </Button>
             <Menu
                 anchorEl={langueMenuAnchorEl}
@@ -51,17 +63,14 @@ const UserLanguageSelector = () => {
                 open={Boolean(langueMenuAnchorEl)}
                 onClose={handleCloseLanguageMenu}
             >
-                <MenuItem onClick={() => handleChangeLanguage("pt-BR")}>
-                    {i18n.t("languages.pt-BR")}
+                <MenuItem onClick={() => handleChangeLanguage("es")}>
+                    {i18n.t("languages.es")}
                 </MenuItem>
                 <MenuItem onClick={() => handleChangeLanguage("en")}>
                     {i18n.t("languages.en")}
                 </MenuItem>
-                <MenuItem onClick={() => handleChangeLanguage("es")}>
-                    {i18n.t("languages.es")}
-                </MenuItem>
-                <MenuItem onClick={() => handleChangeLanguage("tr")}>
-                    {i18n.t("languages.tr")}
+                <MenuItem onClick={() => handleChangeLanguage("pt")}>
+                    {i18n.t("languages.pt")}
                 </MenuItem>
             </Menu>
         </>
